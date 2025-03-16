@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure API Middleware</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.13.1/underscore-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.4.0/backbone-min.js"></script>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <h1>Secure API Middleware</h1>
+    <div id="app"></div>
+
+    <script src="assets/js/models/UserModel.js"></script>
+    <script src="assets/js/views/RegisterView.js"></script>
+    <script src="assets/js/views/LoginView.js"></script>
+    <script src="assets/js/views/APIKeyView.js"></script>
+    <script src="assets/js/views/CountryView.js"></script>
+    <script src="assets/js/router.js"></script>
+    <script>
+        new AppRouter();
+        Backbone.history.start();
+    </script>
+</body>
+</html>
