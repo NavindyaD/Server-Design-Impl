@@ -1,8 +1,8 @@
 const express = require("express");
-const router = express.Router();
-const countryController = require("../controllers/countryController");
-const { authenticateAPIKey } = require("../middleware/authMiddleware");
+const { getCountryInfo } = require("../controllers/countryController");
+const authMiddleware = require("../middleware/authMiddleware");
 
-router.get("/:country", authenticateAPIKey, countryController.getCountryData);
+const router = express.Router();
+router.get("/country", authMiddleware, getCountryInfo);
 
 module.exports = router;

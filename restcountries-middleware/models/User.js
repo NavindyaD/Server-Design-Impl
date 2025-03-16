@@ -1,22 +1,10 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/database");
+const sequelize = require("../database/db");
 
 const User = sequelize.define("User", {
-  username: { type: DataTypes.STRING, unique: true, allowNull: false },
+  username: { type: DataTypes.STRING, allowNull: false, unique: true },
   password: { type: DataTypes.STRING, allowNull: false },
+  apiKey: { type: DataTypes.STRING, unique: true },
 });
 
-const APIKey = sequelize.define("APIKey", {
-  key: { type: DataTypes.STRING, unique: true, allowNull: false },
-});
-
-// Establish relationships
-User.hasMany(APIKey, { foreignKey: "userId", onDelete: "CASCADE" });
-APIKey.belongsTo(User, { foreignKey: "userId" });
-
-// Sync database
-sequelize.sync({ alter: true }) 
-  .then(() => console.log("Database synced successfully"))
-  .catch(err => console.error("Database sync error:", err));
-
-module.exports = { User, APIKey };
+module.exports = User;

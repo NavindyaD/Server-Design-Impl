@@ -1,21 +1,15 @@
 const jwt = require("jsonwebtoken");
-const { APIKey } = require("../models/User");
+require("dotenv").config();
 
-exports.authenticateJWT = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(403).json({ error: "Access denied" });
+module.exports = (req, res, next) => {
+  const token = req.header("Authorization");
+  if (!token) return res.status(403).json({ error: "Access Denied" });
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: "Invalid token" });
-    req.user = user;
+  try {
+    const verified = jwt.verify(token.split(" ")[1], process.env.JWT_SECRET);
+    req.user = verified;
     next();
-  });
-};
-
-exports.authenticateAPIKey = async (req, res, next) => {
-  const apiKey = req.headers["x-api-key"];
-  if (!apiKey || !(await APIKey.findOne({ where: { key: apiKey } }))) {
-    return res.status(403).json({ error: "Invalid API key" });
+  } catch (error) {
+    res.status(400).json({ error: "Invalid Token" });
   }
-  next();
 };
