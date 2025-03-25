@@ -1,18 +1,34 @@
 const BlogPost = require('../models/BlogPost');
 
-exports.createPost = (req, res) => {
-    const { title, content, country, date_of_visit } = req.body;
-    const user_id = req.user.id;
-
-    BlogPost.createPost(title, content, country, date_of_visit, user_id, (err, postId) => {
-        if (err) return res.status(500).json({ error: 'Error creating post' });
-        res.json({ message: 'Post created successfully', postId });
+const createBlogPost = (req, res) => {
+    const { userId, title, content, country, dateOfVisit } = req.body;
+    BlogPost.createPost(userId, title, content, country, dateOfVisit, (err, postId) => {
+        if (err) return res.status(500).json({ error: 'Failed to create blog post' });
+        res.status(201).json({ message: 'Blog post created', postId });
     });
 };
 
-exports.getAllPosts = (req, res) => {
+const getBlogPosts = (req, res) => {
     BlogPost.getAllPosts((err, posts) => {
-        if (err) return res.status(500).json({ error: 'Error retrieving posts' });
-        res.json(posts);
+        if (err) return res.status(500).json({ error: 'Failed to retrieve blog posts' });
+        res.status(200).json(posts);
     });
 };
+
+const getBlogPostsByCountry = (req, res) => {
+    const { country } = req.params;
+    BlogPost.getPostsByCountry(country, (err, posts) => {
+        if (err) return res.status(500).json({ error: 'Failed to retrieve posts by country' });
+        res.status(200).json(posts);
+    });
+};
+
+const getBlogPostsByUser = (req, res) => {
+    const { username } = req.params;
+    BlogPost.getPostsByUser(username, (err, posts) => {
+        if (err) return res.status(500).json({ error: 'Failed to retrieve posts by user' });
+        res.status(200).json(posts);
+    });
+};
+
+module.exports = { createBlogPost, getBlogPosts, getBlogPostsByCountry, getBlogPostsByUser };
