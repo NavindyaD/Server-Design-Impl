@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { Op } = require("sequelize");
 require("dotenv").config();
 
 exports.register = async (req, res) => {
@@ -25,8 +26,12 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
+    // Increment the usage count on successful login
+    user.usageCount += 1;
+    await user.save();
+
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-    res.json({ token, apiKey: user.apiKey });
+    res.json({ token, apiKey: user.apiKey, usageCount: user.usageCount });
   } catch (error) {
     res.status(500).json({ error: "Login failed" });
   }
