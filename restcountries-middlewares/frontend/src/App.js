@@ -8,6 +8,7 @@ import ProtectedRoute from "./pages/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import { AuthProvider } from "./context/AuthContext";
 import ApiKeyManagement from "./pages/ApiKeyManagement";
+
 const App = () => (
   <AuthProvider>
     <BrowserRouter>
@@ -32,13 +33,13 @@ const App = () => (
           }
         />
         <Route
-  path="/manage"
-  element={
-    <ProtectedRoute>
-      <ApiKeyManagement />
-    </ProtectedRoute>
-  }
-/>
+          path="/manage"
+          element={
+            <ProtectedRoute>
+              <ApiKeyManagement />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   </AuthProvider>

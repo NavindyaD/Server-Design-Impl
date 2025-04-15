@@ -1,4 +1,3 @@
-// src/utils/auth.js
 export const saveAuth = (token) => {
     localStorage.setItem("token", token);
   };

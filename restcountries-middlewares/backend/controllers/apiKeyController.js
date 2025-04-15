@@ -4,14 +4,12 @@ const User = require("../models/User");
 // Controller to generate a new API key for the authenticated user
 exports.generateApiKey = async (req, res) => {
   try {
-    // Get the authenticated user from the request object
-    const user = await User.findByPk(req.user.id); // Ensure you are using req.user, populated by the authMiddleware
+    const user = await User.findByPk(req.user.id); //  req.user, populated by the authMiddleware
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Generate a new API key
     const apiKey = uuidv4();
 
     // Update the user's API key in the database

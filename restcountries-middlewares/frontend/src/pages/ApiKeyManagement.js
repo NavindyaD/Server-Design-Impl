@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import "../assets/css/ApiKeyManagement.css"; 
 
+// Main Component for API Key Management
 const ApiKeyManagement = () => {
   const [apiKeyData, setApiKeyData] = useState(null);
   const [message, setMessage] = useState("");
@@ -29,6 +31,7 @@ const ApiKeyManagement = () => {
     fetchApiKey();
   }, [token]);
 
+  // Generate new API key
   const generateNewApiKey = async () => {
     try {
       const res = await axios.post(
@@ -53,6 +56,7 @@ const ApiKeyManagement = () => {
     }
   };
 
+  // Delete the API key
   const deleteApiKey = async () => {
     try {
       await axios.delete("http://localhost:5000/api/keys", {
@@ -72,26 +76,32 @@ const ApiKeyManagement = () => {
   };
 
   return (
-    <div style={{ padding: "2rem" }}>
+    <div className="dashboard-container">
       <h2>API Key Management</h2>
 
-      {message && <p style={{ color: "green" }}>{message}</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {message && <p className="message">{message}</p>}
+      {error && <p className="error">{error}</p>}
 
-      {apiKeyData ? (
-        <div style={{ marginBottom: "1rem" }}>
-          <p><strong>API Key:</strong> {apiKeyData.apiKey}</p>
-          <p><strong>Usage Count:</strong> {apiKeyData.usageCount}</p>
-          <p><strong>Last Used At:</strong> {apiKeyData.lastUsedAt ? new Date(apiKeyData.lastUsedAt).toLocaleString() : "N/A"}</p>
-        </div>
-      ) : (
-        <p>No API key found.</p>
-      )}
+      <div className="api-key-info">
+        {apiKeyData ? (
+          <>
+            <p><strong>API Key:</strong> {apiKeyData.apiKey}</p>
+            <p><strong>Usage Count:</strong> {apiKeyData.usageCount}</p>
+            <p><strong>Last Used At:</strong> {apiKeyData.lastUsedAt ? new Date(apiKeyData.lastUsedAt).toLocaleString() : "N/A"}</p>
+          </>
+        ) : (
+          <p>No API key found.</p>
+        )}
+      </div>
 
-      <button onClick={generateNewApiKey} style={{ marginRight: "1rem" }}>
-        Generate New API Key
-      </button>
-      <button onClick={deleteApiKey}>Delete API Key</button>
+      <div className="button-container">
+        <button onClick={generateNewApiKey} className="generate">
+          Generate New API Key
+        </button>
+        <button onClick={deleteApiKey} className="generate">
+          Delete API Key
+        </button>
+      </div>
     </div>
   );
 };

@@ -15,7 +15,7 @@ exports.getCountryInfo = async (req, res) => {
     const response = await axios.get(`https://restcountries.com/v3.1/name/${country}`);
     
     const filtered = response.data.map(({ name, currencies, capital, languages, flags }) => {
-      const languageList = languages ? Object.values(languages) : [];  // Ensure it's an array
+      const languageList = languages ? Object.values(languages) : [];  // An array
       return {
         name: name.common,
         currency: currencies ? Object.values(currencies)[0].name : "N/A",
