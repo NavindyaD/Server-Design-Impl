@@ -1,20 +1,26 @@
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
+const User = require("../models/User");
 
-module.exports = (req, res, next) => {
-  const authHeader = req.header("Authorization");
+module.exports = async (req, res, next) => {
+  // Extract token from the Authorization header
+  const token = req.header("Authorization")?.replace("Bearer ", "");
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(403).json({ error: "Access Denied: No token provided" });
+  if (!token) {
+    return res.status(401).json({ error: "Access Denied: No token provided" });
   }
 
-  const token = authHeader.split(" ")[1];
-
   try {
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // This is critical to set user info
-    next();
+    const user = await User.findByPk(decoded.id); // Get user by decoded id
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    req.user = user; // Attach user to the request object
+    next(); // Proceed to the next middleware or route handler
   } catch (err) {
-    return res.status(401).json({ error: "Invalid token" });
+    return res.status(401).json({ error: "Token is not valid" });
   }
 };

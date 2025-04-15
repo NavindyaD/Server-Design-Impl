@@ -1,43 +1,25 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/User"); // Import your User model
+const User = require("../models/User");
+const generateApiKey = require("../utils/generateApiKey");
 
-// Register function
 exports.register = async (req, res) => {
   const { username, password } = req.body;
-
   try {
-    // Check if the username already exists
     const existingUser = await User.findOne({ where: { username } });
-    if (existingUser) {
-      return res.status(400).json({ error: "Username already taken" });
-    }
+    if (existingUser) return res.status(400).json({ error: "Username already taken" });
 
-    // Hash password before saving to the database
     const hashedPassword = await bcrypt.hash(password, 10);
+    const apiKey = generateApiKey();
 
-    // Create new user in the database
-    const newUser = await User.create({
-      username,
-      password: hashedPassword,
-    });
-
-    // Generate a JWT token for the new user
+    const newUser = await User.create({ username, password: hashedPassword, apiKey });
     const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-    // Return the response with the token and usage count
-    res.status(201).json({
-      message: "User registered successfully",
-      token,
-      usageCount: newUser.usageCount, // Include the usageCount
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Something went wrong during registration" });
+    res.status(201).json({ message: "Registered", token, apiKey: newUser.apiKey });
+  } catch (err) {
+    res.status(500).json({ error: "Registration failed" });
   }
 };
-
-const crypto = require("crypto");
 
 exports.login = async (req, res) => {
   try {
@@ -48,23 +30,20 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // Generate API key if not already present
-    if (!user.apiKey) {
-      user.apiKey = crypto.randomBytes(8).toString("hex"); // Generates a 16-character API key
-    }
-
-    // Increment usage count and save
+    // Increment usage count and update last used timestamp
     user.usageCount += 1;
+    user.lastUsedAt = new Date();
     await user.save();
 
+    // Generate JWT
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
     res.json({
       message: "Login successful",
       token,
-      userId: user.id,
-      apiKey: user.apiKey,           // Include the API key in response
-      usageCount: user.usageCount
+      apiKey: user.apiKey,
+      usageCount: user.usageCount,
+      lastUsedAt: user.lastUsedAt
     });
   } catch (error) {
     console.error(error);

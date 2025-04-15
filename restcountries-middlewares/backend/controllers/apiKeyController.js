@@ -1,60 +1,104 @@
 const { v4: uuidv4 } = require("uuid");
 const User = require("../models/User");
 
-exports.getApiKey = async (req, res) => {
-    try {
-      const users = await User.findAll({
-        attributes: ["id", "username", "apiKey", "usageCount"]
-      });
-  
-      res.json(users);
-    } catch (error) {
-      res.status(500).json({ error: "Could not retrieve API keys" });
+// Controller to generate a new API key for the authenticated user
+exports.generateApiKey = async (req, res) => {
+  try {
+    // Get the authenticated user from the request object
+    const user = await User.findByPk(req.user.id); // Ensure you are using req.user, populated by the authMiddleware
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
-  };
-  
 
-exports.createApiKey = async (req, res) => {
-  try {
-    const user = await User.findByPk(req.user.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    // Generate a new API key
+    const apiKey = uuidv4();
 
-    user.apiKey = uuidv4();
-    await user.save();
+    // Update the user's API key in the database
+    await user.update({
+      apiKey: apiKey,
+      usageCount: 0, // Reset usage count when a new key is generated
+      lastUsedAt: null, // Reset last used time
+    });
 
-    res.json({ message: "New API key created", apiKey: user.apiKey });
+    res.json({
+      message: "API key generated successfully",
+      apiKey: apiKey,
+    });
   } catch (error) {
-    res.status(500).json({ error: "Could not create API key" });
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
   }
 };
 
-exports.updateApiKey = async (req, res) => {
+// Controller to get the API key of the authenticated user
+exports.getApiKey = async (req, res) => {
   try {
-    const { newApiKey } = req.body;
-    if (!newApiKey) return res.status(400).json({ error: "New API key required" });
+    const user = await User.findByPk(req.user.id); // Get the authenticated user by ID
 
-    const user = await User.findByPk(req.user.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-    user.apiKey = newApiKey;
-    await user.save();
-
-    res.json({ message: "API key updated", apiKey: user.apiKey });
+    // Return the user's API key and other related information
+    res.json({
+      apiKey: user.apiKey,
+      usageCount: user.usageCount,
+      lastUsedAt: user.lastUsedAt,
+    });
   } catch (error) {
-    res.status(500).json({ error: "Could not update API key" });
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
   }
 };
 
+// Controller to update the usage count and the last used time of the API key
+exports.updateUsageCount = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Update the user's usage count and last used time
+    await user.update({
+      usageCount: user.usageCount + 1, // Increment usage count
+      lastUsedAt: new Date(), // Update the last used time
+    });
+
+    res.json({
+      message: "Usage count updated successfully",
+      usageCount: user.usageCount + 1,
+      lastUsedAt: user.lastUsedAt,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+// Controller to delete an API key
 exports.deleteApiKey = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
 
-    user.apiKey = null;
-    await user.save();
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-    res.json({ message: "API key deleted" });
+    // Clear the user's API key
+    await user.update({
+      apiKey: null, // Delete the API key by setting it to null
+      usageCount: 0, // Reset usage count
+      lastUsedAt: null, // Clear the last used time
+    });
+
+    res.json({
+      message: "API key deleted successfully",
+    });
   } catch (error) {
-    res.status(500).json({ error: "Could not delete API key" });
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
   }
 };

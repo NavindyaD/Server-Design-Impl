@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 
 module.exports = (req, res, next) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
+
+  // Check if token is provided
   if (!token) {
     return res.status(401).json({ error: "No token, authorization denied" });
   }
@@ -10,9 +12,17 @@ module.exports = (req, res, next) => {
   try {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Attach decoded user info to the request object
-    next(); // Pass control to the next middleware or route handler
+
+    // Attach decoded user info to the request object
+    req.user = decoded; 
+
+    // Proceed to the next middleware or route handler
+    next(); 
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: "Token has expired" });
+    }
+    console.error("Token verification failed:", error); // Log the error for debugging purposes
     return res.status(401).json({ error: "Token is not valid" });
   }
 };

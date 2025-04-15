@@ -1,25 +1,47 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Register from "./components/Register";
-import Login from "./components/Login";
-import CountrySearch from "./components/CountrySearch";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Login from "./pages/LoginPage";
+import Register from "./pages/RegisterPage";
+import Dashboard from "./pages/Dashboard";
+import CountrySearch from "./pages/CountrySearch";
+import ProtectedRoute from "./pages/ProtectedRoute";
 import Navbar from "./components/Navbar";
-import Logout from "./components/Logout";
-import ApiKeyManager from "./components/ApiKeyManager";
-
-function App() {
-  return (
-    <Router>
+import { AuthProvider } from "./context/AuthContext";
+import ApiKeyManagement from "./pages/ApiKeyManagement";
+const App = () => (
+  <AuthProvider>
+    <BrowserRouter>
       <Navbar />
       <Routes>
+        <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/country" element={<CountrySearch />} />
-        <Route path="/logout" element={<Logout />} />
-        <Route path="/apikey" element={<ApiKeyManager />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/country"
+          element={
+            <ProtectedRoute>
+              <CountrySearch />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+  path="/manage"
+  element={
+    <ProtectedRoute>
+      <ApiKeyManagement />
+    </ProtectedRoute>
+  }
+/>
       </Routes>
-    </Router>
-  );
-}
+    </BrowserRouter>
+  </AuthProvider>
+);
 
 export default App;

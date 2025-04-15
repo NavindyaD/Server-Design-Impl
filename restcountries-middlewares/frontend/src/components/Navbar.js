@@ -1,36 +1,32 @@
+import React from "react";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
 
-function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+const Navbar = () => {
+  const isLoggedIn = !!localStorage.getItem("token");
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-  }, []);
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("apiKey");
+    window.location.href = "/";
+  };
 
   return (
-    <nav>
-      <ul>
-        <li><Link to="/">Home</Link></li>
-
-        {isLoggedIn && (
-          <>
-            <li><Link to="/country">Country Info</Link></li>
-            <li><Link to="/apikey">API Key Management</Link></li> {/* ✅ Now visible when logged in */}
-            <li><Link to="/logout">Logout</Link></li>
-          </>
-        )}
-
-        {!isLoggedIn && (
-          <>
-            <li><Link to="/register">Register</Link></li>
-            <li><Link to="/login">Login</Link></li>
-          </>
-        )}
-      </ul>
+    <nav style={{ padding: "1rem", background: "#eee", display: "flex", gap: "1rem" }}>
+      {isLoggedIn ? (
+        <>
+          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/country">Country Search</Link>
+          <Link to="/manage">Manage API Keys</Link>
+          <button onClick={handleLogout}>Logout</button>
+        </>
+      ) : (
+        <>
+          <Link to="/">Login</Link>
+          <Link to="/register">Register</Link>
+        </>
+      )}
     </nav>
   );
-}
+};
 
 export default Navbar;

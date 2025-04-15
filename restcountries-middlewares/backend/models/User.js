@@ -6,8 +6,7 @@ const User = sequelize.define("User", {
   password: { type: DataTypes.STRING, allowNull: false },
   apiKey: { type: DataTypes.STRING, unique: true },
   usageCount: { type: DataTypes.INTEGER, defaultValue: 0 },
-  isAdmin: { type: DataTypes.BOOLEAN, defaultValue: false },     // if not added yet
-  lastUsedAt: { type: DataTypes.DATE },                          // <-- Add this line
+  lastUsedAt: { type: DataTypes.DATE, allowNull: true },
 });
 
 module.exports = User;

@@ -1,18 +1,18 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const apiKeyController = require("../controllers/apiKeyController");
-const authMiddleware = require("../middleware/authMiddleware");
+const { generateApiKey, getApiKey, updateUsageCount, deleteApiKey } = require('../controllers/apiKeyController');
+const isAuthenticated = require('../middleware/authMiddleware');
 
-// Get current API key
-router.get("/", authMiddleware, apiKeyController.getApiKey);
+// Route for generating an API key
+router.post('/generate', isAuthenticated, generateApiKey);
 
-// Generate new API key (random UUID)
-router.post("/", authMiddleware, apiKeyController.createApiKey);
+// Route for getting the API key details
+router.get('/', isAuthenticated, getApiKey);
 
-// Update API key manually
-router.put("/", authMiddleware, apiKeyController.updateApiKey);
+// Route for updating the usage count of the API key
+router.post('/use', isAuthenticated, updateUsageCount);
 
-// Delete API key
-router.delete("/", authMiddleware, apiKeyController.deleteApiKey);
+// Route for deleting the API key
+router.delete('/', isAuthenticated, deleteApiKey);
 
 module.exports = router;

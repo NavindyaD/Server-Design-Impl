@@ -1,44 +1,31 @@
 const express = require("express");
-const cors = require("cors");
-const path = require("path");
+const dotenv = require("dotenv");
+const cors = require("cors"); // ✅ ADD THIS
 const sequelize = require("./database/db");
-const User = require("./models/User"); // ⬅️ Import User model
-const authMiddleware = require("./middleware/authMiddleware"); // ⬅️ Import authMiddleware
-const userRoutes = require("./routes/userRoutes");
+
+const authRoutes = require("./routes/authRoutes");
+const countryRoutes = require("./routes/countryRoutes");
+const apiRoutes = require("./routes/apikeyRoutes"); 
+
+dotenv.config();
+
 const app = express();
-app.use(cors());
+
+// ✅ Add CORS middleware BEFORE routes
+app.use(cors({
+  origin: "http://localhost:3000", // your React app origin
+  credentials: true
+}));
+
 app.use(express.json());
 
-// Serve static frontend files from the views folder
-app.use(express.static(path.join(__dirname, "views")));
+// ✅ Define routes after CORS and express.json
+app.use("/auth", authRoutes);
+app.use("/api", countryRoutes);
+app.use("/api/keys", apiRoutes); 
 
-// API Routes
-app.use("/auth", require("./routes/authRoutes"));
-app.use("/api", require("./routes/countryRoutes"));
-app.use("/admin", authMiddleware, require("./routes/adminRoutes")); // Protect admin routes with authMiddleware
-app.use("/user", userRoutes); // This will make the endpoint /user/me available
-// TEMPORARY: Make user admin by ID (Remove in production)
-app.get("/make-admin/:id", async (req, res) => {
-  try {
-    const user = await User.findByPk(req.params.id);
-    if (user) {
-      user.isAdmin = true;
-      await user.save();
-      res.json({ message: "User is now admin", user });
-    } else {
-      res.status(404).json({ error: "User not found" });
-    }
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
+// ✅ Sync database and start server
+sequelize.sync().then(() => {
+  console.log("Database synced");
+  app.listen(5000, () => console.log("Server running on http://localhost:5000"));
 });
-
-// Database Sync
-sequelize
-  .sync()
-  .then(() => console.log("Database synced"))
-  .catch((err) => console.error("Database sync error:", err));
-
-// Start Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
