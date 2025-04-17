@@ -2,7 +2,6 @@
 
 A full-stack secure API middleware system with JWT-based user authentication, API key management, and access to country data via the RestCountries API.
 
-
 ## 🚀 Features
 
 ### 🔐 Backend (Node.js + Express + Sequelize + SQLite)
@@ -23,6 +22,11 @@ A full-stack secure API middleware system with JWT-based user authentication, AP
 
 ### Prerequisites:
 - Docker Desktop installed and running
+
+
+### Run Separately:
+frontend -- npm start ( http://localhost:3000)
+backend --  node server.js ( http://localhost:5000)
 
 ### 📦 Build and Start
 ```bash
