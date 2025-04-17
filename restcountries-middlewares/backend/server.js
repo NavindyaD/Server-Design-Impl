@@ -27,5 +27,5 @@ app.use("/api/keys", apiRoutes);
 // Sync database and start server
 sequelize.sync().then(() => {
   console.log("Database synced");
-  app.listen(5000, () => console.log("Server running on http://localhost:5000"));
+  app.listen(5000, '0.0.0.0', () => console.log("Server running on http://0.0.0.0:5000"));
 });
