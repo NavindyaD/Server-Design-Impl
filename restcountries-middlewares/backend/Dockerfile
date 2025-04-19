@@ -1,27 +1,22 @@
-# Use official Node.js 18 image
 FROM node:18
 
-# Set working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Install dependencies for building native modules like sqlite3
-RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
+# Install necessary build tools for sqlite3
+RUN apt-get update && apt-get install -y python3 make g++ 
 
-# Copy package.json and package-lock.json to leverage Docker cache
+# Copy package.json files to install dependencies first (helps with caching)
 COPY package*.json ./
 
-# Install Node.js dependencies inside the container
-RUN npm install
+# Install dependencies and force sqlite3 to rebuild from source
+RUN npm install --build-from-source
 
-# Copy the rest of your backend source code
+# Copy the rest of the application files
 COPY . .
 
-# Expose the port your app runs on (optional, for clarity)
-EXPOSE 3000
+# Expose the port the app will run on
+EXPOSE 5000
 
-# Start the server
-CMD ["npm", "start"]
+# Command to run the app
+CMD ["node", "server.js"]

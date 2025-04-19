@@ -9,10 +9,19 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await API.post("/auth/register", form);
-    navigate("/");
+    try {
+      await API.post("/auth/register", form);
+      navigate("/");
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.message) {
+        alert(`Registration failed: ${error.response.data.message}`);
+      } else {
+        alert("Something went wrong during registration.");
+      }
+      console.error("Registration error:", error);
+    }
   };
-
+  
   return (
     <div className="login-container">
       <form className="login-form" onSubmit={handleSubmit}>
