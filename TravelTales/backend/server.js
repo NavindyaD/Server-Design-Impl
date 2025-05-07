@@ -1,20 +1,21 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const authRoutes = require('./routes/authRoutes');
-const blogRoutes = require('./routes/blogRoutes');
-const userRoutes = require('./routes/userRoutes');
 const app = express();
-const port = 5000;
-
-// Middleware
+const bodyParser = require('body-parser');
+const userRoutes = require('./routes/authRoutes');
+const blogPostRoutes = require('./routes/blogPostRoutes');
+const countryRoutes = require('./routes/countryRoutes');
+const sequelize = require('./config/database');
+const likeRoutes = require('./routes/likeRoutes');
 app.use(bodyParser.json());
 
-// Routes
-app.use('/auth', authRoutes);
-app.use('/blogs', blogRoutes);
-app.use('/users', userRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/blogposts', blogPostRoutes);
+app.use('/api/countries', countryRoutes);
+app.use('/api/likes', likeRoutes);
 
-// Start server
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+sequelize.sync().then(() => {
+  app.listen(3000, () => {
+    console.log('Server is running on port 3000');
+  });
 });
+

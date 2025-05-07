@@ -1,21 +1,21 @@
-const db = require('../config/db');
-const bcrypt = require('bcryptjs');
+const { Sequelize, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const createUser = (email, password, callback) => {
-    bcrypt.hash(password, 10, (err, hashedPassword) => {
-        if (err) return callback(err);
-        const query = 'INSERT INTO users (email, password) VALUES (?, ?)';
-        db.run(query, [email, hashedPassword], function(err) {
-            callback(err, this.lastID);
-        });
-    });
-};
+const User = sequelize.define('User', {
+  username: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+});
 
-const findUserByEmail = (email, callback) => {
-    const query = 'SELECT * FROM users WHERE email = ?';
-    db.get(query, [email], (err, row) => {
-        callback(err, row);
-    });
-};
-
-module.exports = { createUser, findUserByEmail };
+module.exports = User;
