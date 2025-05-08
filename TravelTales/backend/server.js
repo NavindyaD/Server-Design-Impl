@@ -5,13 +5,13 @@ const userRoutes = require('./routes/authRoutes');
 const blogPostRoutes = require('./routes/blogPostRoutes');
 const countryRoutes = require('./routes/countryRoutes');
 const sequelize = require('./config/database');
-const likeRoutes = require('./routes/likeRoutes');
+//const likeRoutes = require('./routes/likeRoutes');
 app.use(bodyParser.json());
 
 app.use('/api/users', userRoutes);
 app.use('/api/blogposts', blogPostRoutes);
 app.use('/api/countries', countryRoutes);
-app.use('/api/likes', likeRoutes);
+//app.use('/api/likes', likeRoutes);
 
 sequelize.sync().then(() => {
   app.listen(3000, () => {

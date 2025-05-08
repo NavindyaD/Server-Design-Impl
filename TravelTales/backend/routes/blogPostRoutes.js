@@ -7,5 +7,6 @@ router.post('/create', authenticateToken, blogPostController.createPost);
 router.get('/posts', blogPostController.getAllPosts);
 router.delete('/:id', authenticateToken, blogPostController.deletePost);
 router.post('/like', authenticateToken, blogPostController.likePost);
-
+router.post('/unlike', authenticateToken, blogPostController.unlikePost);
+router.get('/filter-posts', blogPostController.getFilterPosts);
 module.exports = router;
