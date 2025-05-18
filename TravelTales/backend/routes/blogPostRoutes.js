@@ -9,4 +9,7 @@ router.delete('/:id', authenticateToken, blogPostController.deletePost);
 router.post('/like', authenticateToken, blogPostController.likePost);
 router.post('/unlike', authenticateToken, blogPostController.unlikePost);
 router.get('/filter-posts', blogPostController.getFilterPosts);
+router.post('/comment', authenticateToken, blogPostController.addComment);
+router.get('/:postId/comments', blogPostController.getCommentsForPost);
+
 module.exports = router;

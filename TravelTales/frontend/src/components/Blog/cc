@@ -1,0 +1,155 @@
+import React, { useEffect, useState, useContext } from 'react';
+import api from '../../api/axios';
+import CommentSection from '../CommentSection';
+import { AuthContext } from '../context/AuthContext';  // import your auth context
+
+const PostList = () => {
+  const { user: currentUser } = useContext(AuthContext);
+  const [posts, setPosts] = useState([]);
+  const [countryDetails, setCountryDetails] = useState(null);
+  const [country, setCountry] = useState('');
+  const [username, setUsername] = useState('');
+  const [followingMap, setFollowingMap] = useState({}); // { authorId: true/false }
+
+  useEffect(() => {
+    fetchAllPosts();
+  }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchFollowingList();
+    }
+  }, [currentUser]);
+
+  const fetchAllPosts = async () => {
+    try {
+      const response = await api.get('/blogposts/posts');
+      setPosts(response.data);
+      setCountryDetails(null);
+    } catch (error) {
+      alert('Failed to fetch posts');
+    }
+  };
+
+  // Fetch list of user IDs the current user is following to know which button to show
+  const fetchFollowingList = async () => {
+    try {
+      const res = await api.get(`/follow/following/${currentUser.id}`); // assuming returns array of users
+      // Build a map for quick lookup
+      const map = {};
+      res.data.forEach(followedUser => {
+        map[followedUser.id] = true;
+      });
+      setFollowingMap(map);
+    } catch (error) {
+      console.error('Failed to fetch following list', error);
+    }
+  };
+
+  // Follow author
+  const handleFollow = async (authorId) => {
+    try {
+      await api.post(`/follow/${authorId}`);
+      setFollowingMap(prev => ({ ...prev, [authorId]: true }));
+    } catch (error) {
+      alert('Failed to follow user');
+    }
+  };
+
+  // Unfollow author
+  const handleUnfollow = async (authorId) => {
+    try {
+      await api.delete(`/follow/${authorId}`);
+      setFollowingMap(prev => ({ ...prev, [authorId]: false }));
+    } catch (error) {
+      alert('Failed to unfollow user');
+    }
+  };
+
+  // (You already have your other handlers: like, unlike, delete...)
+
+  return (
+    <div>
+      <h2>Blog Posts</h2>
+
+      {/* Filter inputs */}
+      <div style={{ marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Enter country name"
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Filter by username (optional)"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <button onClick={fetchFilteredPosts}>Filter</button>
+        <button onClick={() => {
+          setCountry('');
+          setUsername('');
+          fetchAllPosts();
+        }}>Clear Filters</button>
+      </div>
+
+      {/* Show country details if available */}
+      {countryDetails && (
+        <div style={{ marginBottom: '20px' }}>
+          <h3>Country Info: {countryDetails.name}</h3>
+          <img src={countryDetails.flag} alt={`${countryDetails.name} flag`} width={100} />
+          <p>Capital: {countryDetails.capital}</p>
+          <p>Currency: {countryDetails.currency}</p>
+        </div>
+      )}
+
+      {/* List of posts */}
+      {posts.length === 0 ? (
+        <p>No posts found.</p>
+      ) : (
+        posts.map(post => {
+          const author = post.User || {};
+          const isCurrentUser = currentUser?.id === author.id;
+          const isFollowing = followingMap[author.id] || false;
+
+          return (
+            <div key={post.id} style={{ border: '1px solid gray', marginBottom: '15px', padding: '10px' }}>
+              <h3>{post.title}</h3>
+              <p>{post.content}</p>
+              <p><strong>Author:</strong> {author.username || 'Unknown'}</p>
+              <p><strong>Country:</strong> {post.countryName || post.country}</p>
+              {post.flag && (
+                <img
+                  src={post.flag}
+                  alt={`${post.countryName || post.country} flag`}
+                  style={{ width: '50px', height: 'auto', marginLeft: '10px' }}
+                />
+              )}
+              <p><strong>Date:</strong> {new Date(post.dateOfVisit || post.createdAt).toLocaleDateString()}</p>
+              <p><strong>Likes:</strong> {post.likeCount ?? 0}</p>
+
+              {/* Like/Unlike/Delete buttons */}
+              <button onClick={() => handleLike(post.id)}>Like</button>
+              <button onClick={() => handleUnlike(post.id)}>Unlike</button>
+              <button onClick={() => handleDelete(post.id)}>Delete</button>
+
+              {/* Follow / Unfollow button */}
+              {!isCurrentUser && currentUser && (
+                isFollowing ? (
+                  <button onClick={() => handleUnfollow(author.id)}>Unfollow</button>
+                ) : (
+                  <button onClick={() => handleFollow(author.id)}>Follow</button>
+                )
+              )}
+
+              <CommentSection postId={post.id} />
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+};
+
+export default PostList;

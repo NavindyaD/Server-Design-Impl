@@ -1,23 +1,33 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('../database/db');
+// models/Follow.js
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const User = require('./User'); // Assuming the User model is already created
 
 const Follow = sequelize.define('Follow', {
-  id: {
+  followerId: {
     type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
+    allowNull: false,
+    references: {
+      model: User,
+      key: 'id',
+    },
   },
-  follower_id: {
+  followingId: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    references: {
+      model: User,
+      key: 'id',
+    },
   },
-  following_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  }
 }, {
-  tableName: 'follows',
-  timestamps: false 
+  timestamps: true,
+  // Ensuring a follower can't follow the same user multiple times
+  uniqueKeys: {
+    unique_follower_following: {
+      fields: ['followerId', 'followingId'],
+    },
+  },
 });
 
 module.exports = Follow;

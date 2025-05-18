@@ -1,5 +1,5 @@
 require('dotenv').config();
-const User = require('../models/User'); 
+const { User } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Sequelize } = require('sequelize');
@@ -47,21 +47,29 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const jwtSecret = process.env.JWT_SECRET; 
+    const jwtSecret = process.env.JWT_SECRET;
 
-    // Find user
-    const user = await User.findOne({ where: { email } });
+    // Normalize email to lowercase for consistent comparison
+    const normalizedEmail = email.toLowerCase();
+
+    // Find user by email (with normalized email)
+    const user = await User.findOne({ where: { email: normalizedEmail } });
     if (!user) {
       return res.status(400).json({ message: 'User not found.' });
     }
 
-    // Compare password
+    // Log the stored password hash for debugging
+    console.log('Stored password hash:', user.password);
+
+    // Compare the password (using bcrypt)
     const validPassword = await bcrypt.compare(password, user.password);
+    console.log('Password match:', validPassword); // Logs whether password matches
+
     if (!validPassword) {
       return res.status(400).json({ message: 'Invalid credentials.' });
     }
 
-    // Generate token
+    // Generate token if password is valid
     const token = jwt.sign(
       { id: user.id, email: user.email },
       jwtSecret,
