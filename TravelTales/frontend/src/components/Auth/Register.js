@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import api from '../../api/axios';
+import './Register.css';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -17,12 +18,13 @@ const Register = () => {
       const response = await api.post('/users/register', formData);
       alert(response.data.message);
     } catch (error) {
-      alert(error.response.data.message || 'Registration failed');
+      alert(error.response?.data?.message || 'Registration failed');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="register-form" onSubmit={handleSubmit}>
+      <h2>Register</h2>
       <input
         name="username"
         placeholder="Username"

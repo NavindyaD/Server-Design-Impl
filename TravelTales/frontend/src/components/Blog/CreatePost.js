@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import api from '../../api/axios';
+import './Post.css'; 
 
 const CreatePost = () => {
   const [post, setPost] = useState({
@@ -9,21 +11,57 @@ const CreatePost = () => {
     dateOfVisit: '',
   });
 
+  const [countries, setCountries] = useState([]);
+  const [error, setError] = useState('');
+
+  // Fetch country list on component mount
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await axios.get('https://restcountries.com/v3.1/all');
+        const countryNames = response.data
+          .map((country) => country.name.common)
+          .sort((a, b) => a.localeCompare(b));
+        setCountries(countryNames);
+      } catch (err) {
+        console.error('Error fetching countries:', err);
+      }
+    };
+
+    fetchCountries();
+  }, []);
+
   const handleChange = (e) =>
     setPost({ ...post, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     try {
-      const response = await api.post('/blogposts/create', post);
+      if (!post.countryName) {
+        setError('Please select a country.');
+        return;
+      }
+
+      await api.post('/blogposts/create', post);
       alert('Post created successfully!');
+
+      // Reset form
+      setPost({
+        title: '',
+        content: '',
+        countryName: '',
+        dateOfVisit: '',
+      });
     } catch (error) {
-      alert(error.response.data.message || 'Post creation failed');
+      console.error('Error creating post:', error);
+      setError(error.response?.data?.message || 'Post creation failed');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="create-post-form">
       <input
         name="title"
         placeholder="Title"
@@ -38,13 +76,19 @@ const CreatePost = () => {
         onChange={handleChange}
         required
       />
-      <input
+      <select
         name="countryName"
-        placeholder="Country Name"
         value={post.countryName}
         onChange={handleChange}
         required
-      />
+      >
+        <option value="">Select Country</option>
+        {countries.map((name) => (
+          <option key={name} value={name}>
+            {name}
+          </option>
+        ))}
+      </select>
       <input
         name="dateOfVisit"
         type="date"
@@ -52,6 +96,7 @@ const CreatePost = () => {
         onChange={handleChange}
         required
       />
+      {error && <p>{error}</p>}
       <button type="submit">Create Post</button>
     </form>
   );

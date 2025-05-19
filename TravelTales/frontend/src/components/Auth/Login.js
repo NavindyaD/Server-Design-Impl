@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import api from '../../api/axios';
 import { AuthContext } from '../../context/AuthContext';
+import './Login.css';
 
 const Login = () => {
   const { login } = useContext(AuthContext);
@@ -16,16 +17,27 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await api.post('/users/login', credentials);
-      localStorage.setItem('token', response.data.token);
-      login({ email: credentials.email });
+
+      const { user, token } = response.data;
+
+      // Combine user info and token into a single object
+      const userWithToken = { ...user, token };
+
+      // Store token (optional since it's also in context)
+      localStorage.setItem('token', token);
+
+      // Login using full user object
+      login(userWithToken);
+
       alert('Login successful!');
     } catch (error) {
-      alert(error.response.data.message || 'Login failed');
+      alert(error.response?.data?.message || 'Login failed');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="login-form" onSubmit={handleSubmit}>
+      <h2>Login</h2>
       <input
         name="email"
         type="email"

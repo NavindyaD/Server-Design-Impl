@@ -1,0 +1,75 @@
+/* Style for the container of the form */
+.create-post-form {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.create-post-form input,
+.create-post-form textarea,
+.create-post-form select,
+.create-post-form button {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.create-post-form input[type="date"] {
+  padding: 8px;
+}
+
+.create-post-form select {
+  font-size: 14px;
+}
+
+.create-post-form button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.create-post-form button:hover {
+  background-color: #45a049;
+}
+
+/* Error message styles */
+.create-post-form p {
+  color: red;
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: -10px;
+}
+
+/* Placeholder style for the inputs */
+.create-post-form input::placeholder,
+.create-post-form textarea::placeholder {
+  color: #888;
+}
+
+/* Styling the input fields */
+.create-post-form input,
+.create-post-form textarea,
+.create-post-form select {
+  background-color: #fff;
+}
+
+.create-post-form textarea {
+  min-height: 150px;
+}
+
+/* Style the title input specifically */
+.create-post-form input[name="title"] {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}

@@ -11,5 +11,10 @@ router.post('/unlike', authenticateToken, blogPostController.unlikePost);
 router.get('/filter-posts', blogPostController.getFilterPosts);
 router.post('/comment', authenticateToken, blogPostController.addComment);
 router.get('/:postId/comments', blogPostController.getCommentsForPost);
+router.put('/posts/:id', authenticateToken, blogPostController.editPost)
+router.get('/postsById/:id', authenticateToken, blogPostController.getPostById)
+router.get('/user/:userId/posts', authenticateToken, blogPostController.getPostsByUserId);
+router.get('/posts/sort', blogPostController.getSortedPosts);  // New endpoint for sorting posts
+
 
 module.exports = router;

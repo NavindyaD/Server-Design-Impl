@@ -195,121 +195,6 @@ exports.getFilterPosts = async (req, res) => {
   }
 };
 
-// exports.getFilterPosts = async (req, res) => {
-//   try {
-//     const { country, username, page = 1, limit = 5 } = req.query;
-
-//     const offset = (page - 1) * limit;
-//     const where = {};
-
-//     // Filter conditions
-//     if (country) {
-//       where.countryName = country;
-//     }
-
-//     const include = {
-//       model: User,
-//       attributes: ['username'],
-//     };
-
-//     if (username) {
-//       include.where = { username };
-//     }
-
-//     const posts = await BlogPost.findAll({
-//       where,
-//       include,
-//       offset,
-//       limit: parseInt(limit),
-//     });
-
-//     // If country is provided, get details once
-//     const countryDetails = country ? await getCountryDetails(country) : null;
-
-//     const formattedPosts = posts.map((post) => ({
-//       id: post.id,
-//       title: post.title,
-//       content: post.content,
-//       author: post.User?.username,
-//       date: post.createdAt,
-//       country: post.countryName,
-//       ...(countryDetails && {
-//         flag: countryDetails.flag,
-//         currency: countryDetails.currency,
-//         capital: countryDetails.capital,
-//       }),
-//     }));
-
-//     res.status(200).json({
-//       posts: formattedPosts,
-//       ...(countryDetails && {
-//         country: {
-//           name: country,
-//           flag: countryDetails.flag,
-//           currency: countryDetails.currency,
-//           capital: countryDetails.capital,
-//         },
-//       }),
-//     });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-
-// exports.getFilterPosts = async (req, res) => {
-//   try {
-//     const { country, username, page = 1, limit = 5 } = req.query;
-
-//     if (!country) {
-//       return res.status(400).json({ error: 'Country is required for this view format.' });
-//     }
-
-//     const offset = (page - 1) * limit;
-
-//     const where = { countryName: country };
-//     if (username) {
-//       where['$User.username$'] = username;
-//     }
-
-//     const posts = await BlogPost.findAll({
-//       where,
-//       include: {
-//         model: User,
-//         attributes: ['username'],
-//       },
-//       offset,
-//       limit: parseInt(limit),
-//     });
-
-//     // Get country metadata once
-//     const countryDetails = await getCountryDetails(country);
-
-//     // Format posts
-//     const formattedPosts = posts.map((post) => ({
-//       id: post.id,
-//       title: post.title,
-//       content: post.content,
-//       author: post.User.username,
-//       date: post.createdAt,
-//     }));
-
-//     // Send structured response
-//     res.status(200).json({
-//       country: {
-//         name: country,
-//         flag: countryDetails.flag,
-//         currency: countryDetails.currency,
-//         capital: countryDetails.capital,
-//       },
-//       posts: formattedPosts,
-//     });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-
 exports.addComment = async (req, res) => {
   const { blogPostId, content } = req.body;
   const userId = req.user.id;
@@ -362,53 +247,137 @@ exports.getCommentsForPost = async (req, res) => {
   }
 };
 
+exports.getPostsByUserId = async (req, res) => {
+  try {
+    const userId = req.params.userId;
 
-// exports.getFilterPosts = async (req, res) => {
-//   try {
-//     const { country, username, page = 1, limit = 5 } = req.query; // Get query params
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
 
-//     // Pagination
-//     const offset = (page - 1) * limit;
-    
-//     // Build the where condition dynamically based on the query parameters
-//     const where = {};
-//     if (country) {
-//       where.countryName = country; // Filter by country name
-//     }
-//     if (username) {
-//       where['$User.username$'] = username; // Filter by username of the author (user)
-//     }
+    const posts = await BlogPost.findAll({
+      where: { userId },
+      include: [{
+        model: User,
+        attributes: ['id', 'username']
+      }],
+      order: [['createdAt', 'DESC']]
+    });
 
-//     // Fetch blog posts with filters applied and include User model
-//     const posts = await BlogPost.findAll({
-//       where,
-//       include: {
-//         model: User,
-//         attributes: ['username'], // Only include username in the result
-//       },
-//       offset,
-//       limit: parseInt(limit),
-//     });
+    res.status(200).json(posts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
-//     // Enrich posts with country details
-//     const enrichedPosts = await Promise.all(posts.map(async (post) => {
-//       const countryDetails = await getCountryDetails(post.countryName);
-//       return {
-//         id: post.id,
-//         title: post.title,
-//         content: post.content,
-//         author: post.User.username,
-//         date: post.createdAt,
-//         country: post.countryName,
-//         flag: countryDetails.flag,
-//         currency: countryDetails.currency,
-//         capital: countryDetails.capital
-//       };
-//     }));
 
-//     // Return enriched posts
-//     res.status(200).json(enrichedPosts);
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
+
+exports.editPost = async (req, res) => {
+  const postId = req.params.id;
+  const userId = req.user.id;
+  const { title, content, countryName, dateOfVisit } = req.body;
+
+  try {
+    const post = await BlogPost.findByPk(postId);
+
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+
+    // Check if the current user is the post owner
+    if (post.userId !== userId) {
+      return res.status(403).json({ message: 'Not authorized to edit this post' });
+    }
+
+    // Update post fields
+    post.title = title || post.title;
+    post.content = content || post.content;
+    post.countryName = countryName || post.countryName;
+    post.dateOfVisit = dateOfVisit || post.dateOfVisit;
+
+    await post.save();
+
+    res.status(200).json({ message: 'Post updated successfully', post });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+
+// controllers/blogPostController.js
+
+exports.getPostById = async (req, res) => {
+  const postId = req.params.id;  // Get postId from URL params
+
+  // Validate postId to make sure it's a valid number or string, based on your DB schema
+  if (!postId || isNaN(postId)) {
+    return res.status(400).json({ message: 'Invalid Post ID provided' });
+  }
+
+  try {
+    // Find the post by its ID, including associated User model
+    const post = await BlogPost.findByPk(postId, {
+      include: [{
+        model: User,
+        attributes: ['id', 'username'], // Include only the fields you need from the User model
+      }]
+    });
+
+    // If post is not found, return a 404 status
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Return the post details
+    res.status(200).json(post);
+  } catch (err) {
+    // Handle error if something goes wrong
+    console.error(err);  // Log the error for server-side debugging
+    res.status(500).json({ error: 'An error occurred while fetching the post.', details: err.message });
+  }
+};
+
+
+exports.getSortedPosts = async (req, res) => {
+  const { sortBy } = req.query;  // sortBy can be 'newest', 'most_liked', or 'most_commented'
+
+  try {
+    let order;
+
+    // Set sorting criteria based on the sortBy query
+    switch (sortBy) {
+      case 'newest':
+        order = [['createdAt', 'DESC']];
+        break;
+      case 'most_liked':
+        order = [['likeCount', 'DESC']];
+        break;
+      case 'most_commented':
+        order = [
+          [Comment, 'createdAt', 'DESC'], // This assumes you want posts with the most recent comments sorted first
+        ];
+        break;
+      default:
+        order = [['createdAt', 'DESC']];  // Default to newest if invalid sortBy value is given
+        break;
+    }
+
+    // Fetch blog posts based on the sorting criteria
+    const posts = await BlogPost.findAll({
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'username'],
+        },
+        {
+          model: Comment,  // Include comments to filter by 'most_commented'
+          required: false, // To include posts with no comments as well
+        },
+      ],
+      order,
+    });
+
+    res.status(200).json(posts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

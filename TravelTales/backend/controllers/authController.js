@@ -76,7 +76,16 @@ exports.loginUser = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    return res.json({ message: 'Login successful!', token });
+    // Include user data in the response alongside the token
+    return res.json({
+      message: 'Login successful!',
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      },
+    });
   } catch (error) {
     console.error('Login error:', error);
     return res.status(500).json({ message: 'Internal server error', error: error.message });

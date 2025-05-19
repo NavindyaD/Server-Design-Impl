@@ -1,0 +1,86 @@
+/* Container for user posts */
+.user-posts {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Heading for the user posts */
+.user-posts h2 {
+  text-align: center;
+  font-size: 24px;
+  color: #333;
+}
+
+/* Individual post container */
+.user-posts ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.user-posts li {
+  background-color: white;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Title of the post */
+.user-posts h3 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+/* Post content style */
+.user-posts p {
+  font-size: 16px;
+  color: #555;
+}
+
+/* Post author and date */
+.user-posts em {
+  font-size: 14px;
+  color: #777;
+}
+
+.user-posts small {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #888;
+}
+
+/* Edit button style */
+.user-posts button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.user-posts button:hover {
+  background-color: #45a049;
+}
+
+/* If no posts found, style the message */
+.user-posts p.no-posts {
+  text-align: center;
+  font-size: 18px;
+  color: #888;
+}
+
+/* Error message styling */
+.user-posts p.error {
+  color: red;
+  text-align: center;
+  font-weight: bold;
+}

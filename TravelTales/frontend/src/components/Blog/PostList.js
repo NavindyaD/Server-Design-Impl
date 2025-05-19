@@ -3,6 +3,8 @@ import api from '../../api/axios';
 import CommentSection from '../CommentSection';
 import { AuthContext } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
+import BlogHome from './Blog'; // Adjust the path if it's different
+//import './PostList.css';
 
 const PostList = () => {
   const { user } = useContext(AuthContext);
@@ -12,10 +14,12 @@ const PostList = () => {
   const [country, setCountry] = useState('');
   const [username, setUsername] = useState('');
   const [followingList, setFollowingList] = useState([]);
+  const [countries, setCountries] = useState([]);
 
   useEffect(() => {
     fetchAllPosts();
     if (user) fetchFollowingList(user.id);
+    fetchCountries(); // Fetch country list
   }, [user]);
 
   const fetchAllPosts = async () => {
@@ -91,64 +95,84 @@ const PostList = () => {
     }
   };
 
-  // Fetch the list of users that the logged-in user is following
   const fetchFollowingList = async (userId) => {
     try {
       const response = await api.get(`/follow/following/${userId}`);
-      setFollowingList(response.data.map(u => u.id)); // store array of followed user IDs
+      setFollowingList(response.data.map(u => u.id));
     } catch (error) {
       console.error('Failed to fetch following list', error);
     }
   };
 
-  // Follow a user
-  const handleFollow = async (followingId) => {
-  try {
-    const token = localStorage.getItem('token');  // or from your auth context
-    if (!token) {
-      alert('You must be logged in to follow users');
-      return;
+  const fetchCountries = async () => {
+    try {
+      const response = await fetch('https://restcountries.com/v3.1/all');
+      const data = await response.json();
+      const countryList = data
+        .map(country => ({
+          name: country.name.common,
+          code: country.cca2,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      setCountries(countryList);
+    } catch (error) {
+      console.error('Failed to fetch countries', error);
     }
+  };
 
-    await api.post('/follow/follow', 
-      { followingId },
-      {
-        headers: { Authorization: `Bearer ${token}` },
+  const handleFollow = async (followingId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('You must be logged in to follow users');
+        return;
       }
-    );
-    alert('Followed successfully');
-    refreshPosts(); 
-  } catch (error) {
-    console.error(error);
-    alert(error.response?.data?.message || 'Failed to follow user');
-  }
-};
 
-const handleUnfollow = async (followedUserId) => {
+      await api.post('/follow/follow',
+        { followingId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Followed successfully');
+      refreshPosts();
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || 'Failed to follow user');
+    }
+  };
+
+  const handleUnfollow = async (followedUserId) => {
     if (!user) {
       alert('Please login to unfollow users.');
       return;
     }
     try {
-      await api.post('/follow/unfollow', { followerId: user.id, followedId: followedUserId });
-      fetchFollowingList(user.id);
+      await api.delete(`http://localhost:5000/api/follow/unfollow/${followedUserId}`);
+      fetchFollowingList(user.id); // Refresh the following list
+      alert('Successfully unfollowed the user');
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to unfollow user');
     }
   };
 
   return (
-    <div>
+    <div className="blog-container">
       <h2>Blog Posts</h2>
+      <BlogHome />
 
       {/* Filter inputs */}
-      <div style={{ marginBottom: '20px' }}>
-        <input
-          type="text"
-          placeholder="Enter country name"
+      <div className="filter-container">
+        <select
           value={country}
           onChange={(e) => setCountry(e.target.value)}
-        />
+        >
+          <option value="">Select a country</option>
+          {countries.map((country) => (
+            <option key={country.code} value={country.name}>
+              {country.name}
+            </option>
+          ))}
+        </select>
+
         <input
           type="text"
           placeholder="Filter by username (optional)"
@@ -167,17 +191,17 @@ const handleUnfollow = async (followedUserId) => {
         </button>
       </div>
 
-      {/* Show country details if available */}
+      {/* Country Info */}
       {countryDetails && (
-        <div style={{ marginBottom: '20px' }}>
+        <div className="country-info">
           <h3>Country Info: {countryDetails.name}</h3>
-          <img src={countryDetails.flag} alt={`${countryDetails.name} flag`} width={100} />
+          <img src={countryDetails.flag} alt={`${countryDetails.name} flag`} />
           <p>Capital: {countryDetails.capital}</p>
           <p>Currency: {countryDetails.currency}</p>
         </div>
       )}
 
-      {/* List of posts */}
+      {/* Posts */}
       {posts.length === 0 ? (
         <p>No posts found.</p>
       ) : (
@@ -187,7 +211,7 @@ const handleUnfollow = async (followedUserId) => {
           return (
             <div
               key={post.id}
-              style={{ border: '1px solid gray', marginBottom: '15px', padding: '10px' }}
+              className="post-item"
             >
               <h3>{post.title}</h3>
               <p>{post.content}</p>
@@ -206,34 +230,38 @@ const handleUnfollow = async (followedUserId) => {
                 <img
                   src={post.flag}
                   alt={`${post.countryName || post.country} flag`}
-                  style={{ width: '50px', height: 'auto', marginLeft: '10px' }}
                 />
               )}
               <p>
                 <strong>Date:</strong>{' '}
                 {new Date(post.dateOfVisit || post.createdAt).toLocaleDateString()}
               </p>
-              <p>
-                <strong>Likes:</strong> {post.likeCount ?? 0}
-              </p>
+              <div className="likes-info">
+                <p>
+                  <strong>Likes:</strong> {post.likeCount ?? 0}
+                </p>
+              </div>
 
-              {/* Like, Unlike, Delete Buttons */}
-              <button onClick={() => handleLike(post.id)}>Like</button>
-              <button onClick={() => handleUnlike(post.id)}>Unlike</button>
-              {isOwnPost && <button onClick={() => handleDelete(post.id)}>Delete</button>}
+              {/* Buttons */}
+              <div className="post-buttons">
+                <button onClick={() => handleLike(post.id)}>Like</button>
+                <button onClick={() => handleUnlike(post.id)}>Unlike</button>
+                {isOwnPost && <button onClick={() => handleDelete(post.id)}>Delete</button>}
 
-              {/* Follow/Unfollow Button */}
-              {!isOwnPost && user && (
-                <>
-                  {isFollowing ? (
+                {/* Follow/Unfollow */}
+                {!isOwnPost && user && (
+                  isFollowing ? (
                     <button onClick={() => handleUnfollow(post.userId)}>Unfollow</button>
                   ) : (
                     <button onClick={() => handleFollow(post.userId)}>Follow</button>
-                  )}
-                </>
-              )}
+                  )
+                )}
+              </div>
 
-              <CommentSection postId={post.id} />
+              {/* Comments */}
+              <div className="comment-section">
+                <CommentSection postId={post.id} />
+              </div>
             </div>
           );
         })
