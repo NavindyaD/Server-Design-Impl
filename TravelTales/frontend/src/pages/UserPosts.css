@@ -1,4 +1,3 @@
-/* Container for user posts */
 .user-posts {
   max-width: 800px;
   margin: 20px auto;
@@ -8,14 +7,12 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Heading for the user posts */
 .user-posts h2 {
   text-align: center;
   font-size: 24px;
   color: #333;
 }
 
-/* Individual post container */
 .user-posts ul {
   list-style-type: none;
   padding: 0;
@@ -29,20 +26,17 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Title of the post */
 .user-posts h3 {
   font-size: 20px;
   color: #333;
   margin-bottom: 10px;
 }
 
-/* Post content style */
 .user-posts p {
   font-size: 16px;
   color: #555;
 }
 
-/* Post author and date */
 .user-posts em {
   font-size: 14px;
   color: #777;
@@ -55,7 +49,6 @@
   color: #888;
 }
 
-/* Edit button style */
 .user-posts button {
   background-color: #4CAF50;
   color: white;
@@ -71,14 +64,12 @@
   background-color: #45a049;
 }
 
-/* If no posts found, style the message */
 .user-posts p.no-posts {
   text-align: center;
   font-size: 18px;
   color: #888;
 }
 
-/* Error message styling */
 .user-posts p.error {
   color: red;
   text-align: center;

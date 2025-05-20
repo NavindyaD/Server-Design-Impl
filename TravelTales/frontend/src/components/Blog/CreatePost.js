@@ -14,7 +14,6 @@ const CreatePost = () => {
   const [countries, setCountries] = useState([]);
   const [error, setError] = useState('');
 
-  // Fetch country list on component mount
   useEffect(() => {
     const fetchCountries = async () => {
       try {

@@ -28,7 +28,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// ✅ Add this hook so other components can consume the context
 export const useAuthContext = () => {
   return useContext(AuthContext);
 };

@@ -1,6 +1,6 @@
-// src/components/CommentSection.js
 import React, { useEffect, useState } from 'react';
 import api from '../api/axios';
+import './CommentSection.css';
 
 const CommentSection = ({ postId }) => {
   const [comments, setComments] = useState([]);
@@ -32,7 +32,7 @@ const CommentSection = ({ postId }) => {
   };
 
   return (
-    <div>
+    <div className="comment-section">
       <h4>Comments</h4>
       <form onSubmit={handleAddComment}>
         <input
@@ -47,7 +47,7 @@ const CommentSection = ({ postId }) => {
       <ul>
         {comments.map((comment) => (
           <li key={comment.id}>
-            <strong>{comment.author}</strong>: {comment.content}
+            <strong>{comment.author}</strong>: <p>{comment.content}</p>
           </li>
         ))}
       </ul>

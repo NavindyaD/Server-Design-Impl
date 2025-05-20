@@ -5,7 +5,7 @@ import { useAuthContext } from '../../context/AuthContext';
 import './Post.css'; 
 
 const EditPost = () => {
-  const { id } = useParams(); // NOTE: Make sure App.js uses `:id`, not `:postId`
+  const { id } = useParams();
   const { user } = useAuthContext();
   const navigate = useNavigate();
 
@@ -19,7 +19,6 @@ const EditPost = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch countries for dropdown
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -64,7 +63,11 @@ const EditPost = () => {
         setUpdatedTitle(data.title);
         setUpdatedContent(data.content);
         setUpdatedCountryName(data.countryName);
-        setUpdatedDateOfVisit(data.dateOfVisit);
+
+        // Ensure the date is in the correct format for the input field
+        const formattedDate = data.dateOfVisit ? data.dateOfVisit.split('T')[0] : '';
+        setUpdatedDateOfVisit(formattedDate);
+
         setLoading(false);
       } catch (err) {
         console.error('Error fetching post:', err);

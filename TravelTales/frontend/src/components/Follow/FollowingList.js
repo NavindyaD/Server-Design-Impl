@@ -1,10 +1,10 @@
-// src/components/Follow/FollowingList.js
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../api/axios';
+import './FollowingList.css';
 
 const FollowingList = () => {
-  const { userId } = useParams(); // ✅ Get userId from route params
+  const { userId } = useParams();
   const [following, setFollowing] = useState([]);
 
   useEffect(() => {
@@ -15,7 +15,7 @@ const FollowingList = () => {
   }, [userId]);
 
   return (
-    <div>
+    <div className="following-container">
       <h3>Following</h3>
       {following.length === 0 ? (
         <p>Not following anyone yet.</p>

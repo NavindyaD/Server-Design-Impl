@@ -3,28 +3,31 @@ import api from '../../api/axios';
 import CommentSection from '../CommentSection';
 import { AuthContext } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
-import BlogHome from './Blog'; // Adjust the path if it's different
-//import './PostList.css';
+import { FaThumbsUp, FaThumbsDown } from 'react-icons/fa';
+import './PostList.css';
 
 const PostList = () => {
   const { user } = useContext(AuthContext);
 
   const [posts, setPosts] = useState([]);
+  const [allPosts, setAllPosts] = useState([]);
   const [countryDetails, setCountryDetails] = useState(null);
   const [country, setCountry] = useState('');
   const [username, setUsername] = useState('');
   const [followingList, setFollowingList] = useState([]);
   const [countries, setCountries] = useState([]);
+  const [sortOption, setSortOption] = useState('newest');
 
   useEffect(() => {
-    fetchAllPosts();
+    fetchAllPosts(sortOption);
     if (user) fetchFollowingList(user.id);
-    fetchCountries(); // Fetch country list
-  }, [user]);
+    fetchCountries();
+  }, [user, sortOption]);
 
-  const fetchAllPosts = async () => {
+  const fetchAllPosts = async (sort = sortOption) => {
     try {
-      const response = await api.get('/blogposts/posts');
+      const response = await api.get(`/blogposts/posts/sort?sortBy=${sort}`);
+      setAllPosts(response.data);
       setPosts(response.data);
       setCountryDetails(null);
     } catch (error) {
@@ -32,40 +35,20 @@ const PostList = () => {
     }
   };
 
-  const fetchFilteredPosts = async () => {
-    if (!country.trim() && !username.trim()) {
-      alert('Please enter a country or username to filter.');
-      return;
+  const filterPosts = () => {
+    let filteredPosts = [...allPosts];
+
+    // Filter by country
+    if (country.trim()) {
+      filteredPosts = filteredPosts.filter(post => post.countryName === country || post.country === country);
     }
 
-    try {
-      const params = new URLSearchParams();
-      params.append('page', 1);
-      params.append('limit', 5);
-      if (country.trim()) params.append('country', country.trim());
-      if (username.trim()) params.append('username', username.trim());
-
-      const response = await api.get(`/blogposts/filter-posts?${params.toString()}`);
-
-      if (country.trim()) {
-        const { posts, country: countryInfo } = response.data;
-        setPosts(posts || []);
-        setCountryDetails(countryInfo || null);
-      } else {
-        setPosts(response.data);
-        setCountryDetails(null);
-      }
-    } catch (error) {
-      alert(error.response?.data?.message || 'Failed to filter posts');
+    // Filter by username
+    if (username.trim()) {
+      filteredPosts = filteredPosts.filter(post => post.User?.username.toLowerCase().includes(username.toLowerCase()));
     }
-  };
 
-  const refreshPosts = () => {
-    if (country.trim() || username.trim()) {
-      fetchFilteredPosts();
-    } else {
-      fetchAllPosts();
-    }
+    setPosts(filteredPosts);
   };
 
   const handleLike = async (postId) => {
@@ -147,19 +130,25 @@ const PostList = () => {
     }
     try {
       await api.delete(`http://localhost:5000/api/follow/unfollow/${followedUserId}`);
-      fetchFollowingList(user.id); // Refresh the following list
+      fetchFollowingList(user.id);
       alert('Successfully unfollowed the user');
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to unfollow user');
     }
   };
 
+  const refreshPosts = () => {
+    if (country.trim() || username.trim()) {
+      filterPosts();
+    } else {
+      setPosts(allPosts);
+    }
+  };
+
   return (
     <div className="blog-container">
       <h2>Blog Posts</h2>
-      <BlogHome />
 
-      {/* Filter inputs */}
       <div className="filter-container">
         <select
           value={country}
@@ -175,31 +164,37 @@ const PostList = () => {
 
         <input
           type="text"
-          placeholder="Filter by username (optional)"
+          placeholder="Filter by username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        <button onClick={fetchFilteredPosts}>Filter</button>
+        <button onClick={filterPosts}>Filter</button>
         <button
           onClick={() => {
             setCountry('');
             setUsername('');
-            fetchAllPosts();
+            setPosts(allPosts);
           }}
         >
           Clear Filters
         </button>
       </div>
 
-      {/* Country Info */}
-      {countryDetails && (
-        <div className="country-info">
-          <h3>Country Info: {countryDetails.name}</h3>
-          <img src={countryDetails.flag} alt={`${countryDetails.name} flag`} />
-          <p>Capital: {countryDetails.capital}</p>
-          <p>Currency: {countryDetails.currency}</p>
-        </div>
-      )}
+      {/* Sorting Dropdown */}
+      <div className="sort-container">
+        <label>Sort by: </label>
+        <select
+          value={sortOption}
+          onChange={(e) => {
+            setSortOption(e.target.value);
+            fetchAllPosts(e.target.value);
+          }}
+        >
+          <option value="newest">Newest</option>
+          <option value="most_liked">Most Liked</option>
+          <option value="most_commented">Most Commented</option>
+        </select>
+      </div>
 
       {/* Posts */}
       {posts.length === 0 ? (
@@ -242,10 +237,15 @@ const PostList = () => {
                 </p>
               </div>
 
-              {/* Buttons */}
               <div className="post-buttons">
-                <button onClick={() => handleLike(post.id)}>Like</button>
-                <button onClick={() => handleUnlike(post.id)}>Unlike</button>
+                <button onClick={() => handleLike(post.id)}>
+                  <FaThumbsUp style={{ color: 'blue', fontSize: '20px' }} /> Like
+                </button>
+
+                <button onClick={() => handleUnlike(post.id)}>
+                  <FaThumbsDown style={{ color: 'red', fontSize: '20px' }} /> Unlike
+                </button>
+
                 {isOwnPost && <button onClick={() => handleDelete(post.id)}>Delete</button>}
 
                 {/* Follow/Unfollow */}

@@ -12,7 +12,6 @@ const UserPosts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ✅ Debugging: Show user info in console
   useEffect(() => {
     if (user) {
       console.log('Logged-in username:', user.username);
@@ -69,7 +68,6 @@ const UserPosts = () => {
               <p>{post.content}</p>
               <small>{new Date(post.createdAt).toLocaleString()}</small>
 
-              {/* Edit button - Link to EditPost page */}
               <Link to={`/edit/${post.id}`}>
                 <button>Edit</button>
               </Link>

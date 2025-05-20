@@ -14,7 +14,7 @@ const Navbar = () => {
         <>
           <Link to="/create-post">Create Post</Link>
           {/* Pass user.id dynamically to User Posts */}
-          <Link to={`/profiles/${user.id}`}>User Posts</Link>
+          <Link to={`/userPosts/${user.id}`}>User Posts</Link>
           <button onClick={logout}>Logout</button>
         </>
       ) : (
