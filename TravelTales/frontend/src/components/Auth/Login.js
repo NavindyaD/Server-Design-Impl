@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { AuthContext } from '../../context/AuthContext';
 import './Login.css';
@@ -10,6 +11,8 @@ const Login = () => {
     password: '',
   });
 
+  const navigate = useNavigate();
+
   const handleChange = (e) =>
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
 
@@ -19,17 +22,13 @@ const Login = () => {
       const response = await api.post('/users/login', credentials);
 
       const { user, token } = response.data;
-
-      // Combine user info and token into a single object
       const userWithToken = { ...user, token };
 
-      // Store token (optional since it's also in context)
       localStorage.setItem('token', token);
-
-      // Login using full user object
       login(userWithToken);
 
       alert('Login successful!');
+      navigate('/');
     } catch (error) {
       alert(error.response?.data?.message || 'Login failed');
     }

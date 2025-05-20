@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/AuthContext';
-import './Post.css'; 
+import './Post.css';
 
 const EditPost = () => {
   const { id } = useParams();
@@ -18,6 +18,7 @@ const EditPost = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -64,7 +65,6 @@ const EditPost = () => {
         setUpdatedContent(data.content);
         setUpdatedCountryName(data.countryName);
 
-        // Ensure the date is in the correct format for the input field
         const formattedDate = data.dateOfVisit ? data.dateOfVisit.split('T')[0] : '';
         setUpdatedDateOfVisit(formattedDate);
 
@@ -97,7 +97,11 @@ const EditPost = () => {
       );
 
       console.log('Post updated successfully:', res.data);
-      navigate(`/post/${id}`);
+      setSuccessMessage('Post updated successfully! Redirecting...');
+
+      setTimeout(() => {
+        navigate('/');
+      }, 2000);
     } catch (err) {
       console.error('Error updating post:', err);
       setError('Failed to update post.');
@@ -109,7 +113,7 @@ const EditPost = () => {
 
   return (
     <div>
-      <h2>Edit Post</h2>
+      {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
       <form onSubmit={handleSubmit} className="create-post-form">
         <div>
           <label>Title:</label>
