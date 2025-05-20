@@ -14,7 +14,7 @@ router.get('/:postId/comments', blogPostController.getCommentsForPost);
 router.put('/posts/:id', authenticateToken, blogPostController.editPost)
 router.get('/postsById/:id', authenticateToken, blogPostController.getPostById)
 router.get('/user/:userId/posts', authenticateToken, blogPostController.getPostsByUserId);
-router.get('/posts/sort', blogPostController.getSortedPosts);  // New endpoint for sorting posts
+router.get('/posts/sort', blogPostController.getSortedPosts);
 
 
 module.exports = router;

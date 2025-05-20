@@ -1,4 +1,3 @@
-// utils/getCountryDetails.js
 const axios = require('axios');
 
 const getCountryDetails = async (countryName) => {

@@ -1,6 +1,5 @@
 const { Follow, User, BlogPost } = require('../models');
 
-// Follow a user
 exports.followUser = async (req, res) => {
   try {
     const { followingId } = req.body;
@@ -23,7 +22,6 @@ exports.followUser = async (req, res) => {
   }
 };
 
-// Unfollow a user
 exports.unfollowUser = async (req, res) => {
   try {
     const { followingId } = req.params;
@@ -37,7 +35,6 @@ exports.unfollowUser = async (req, res) => {
   }
 };
 
-// Get all followers of a user
 exports.getFollowers = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -54,7 +51,6 @@ exports.getFollowers = async (req, res) => {
   }
 };
 
-// Get all users a user is following
 exports.getFollowing = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -71,7 +67,6 @@ exports.getFollowing = async (req, res) => {
   }
 };
 
-// Get feed posts from followed users
 exports.getFeedPosts = async (req, res) => {
   try {
     const userId = req.user.id;

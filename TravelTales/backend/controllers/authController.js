@@ -3,7 +3,7 @@ const { User } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Sequelize } = require('sequelize');
-// Register user
+
 exports.registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -19,7 +19,6 @@ exports.registerUser = async (req, res) => {
       return res.status(400).json({ message: 'Username or email already in use.' });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
@@ -43,7 +42,6 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -52,18 +50,17 @@ exports.loginUser = async (req, res) => {
     // Normalize email to lowercase for consistent comparison
     const normalizedEmail = email.toLowerCase();
 
-    // Find user by email (with normalized email)
+    // Find user by email
     const user = await User.findOne({ where: { email: normalizedEmail } });
     if (!user) {
       return res.status(400).json({ message: 'User not found.' });
     }
 
-    // Log the stored password hash for debugging
     console.log('Stored password hash:', user.password);
 
     // Compare the password (using bcrypt)
     const validPassword = await bcrypt.compare(password, user.password);
-    console.log('Password match:', validPassword); // Logs whether password matches
+    console.log('Password match:', validPassword); 
 
     if (!validPassword) {
       return res.status(400).json({ message: 'Invalid credentials.' });

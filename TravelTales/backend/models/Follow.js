@@ -1,7 +1,6 @@
-// models/Follow.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const User = require('./User'); // Assuming the User model is already created
+const User = require('./User');
 
 const Follow = sequelize.define('Follow', {
   followerId: {
@@ -22,7 +21,6 @@ const Follow = sequelize.define('Follow', {
   },
 }, {
   timestamps: true,
-  // Ensuring a follower can't follow the same user multiple times
   uniqueKeys: {
     unique_follower_following: {
       fields: ['followerId', 'followingId'],

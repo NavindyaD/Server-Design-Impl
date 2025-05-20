@@ -23,9 +23,9 @@ exports.getAllPosts = async (req, res) => {
     const posts = await BlogPost.findAll({
       include: [{
         model: User,
-        attributes: ['id', 'username'], // select fields you want from User
+        attributes: ['id', 'username'],
       }],
-      order: [['createdAt', 'DESC']], // optional: order posts by creation date
+      order: [['createdAt', 'DESC']], 
     });
 
     res.status(200).json(posts);
@@ -33,15 +33,6 @@ exports.getAllPosts = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
-
-// exports.getAllPosts = async (req, res) => {
-//   try {
-//     const posts = await BlogPost.findAll();
-//     res.status(200).json(posts);
-//   } catch (err) {
-//     res.status(400).json({ error: err.message });
-//   }
-// };
 
 exports.deletePost = async (req, res) => {
   const postId = req.params.id;
@@ -131,7 +122,7 @@ exports.getFilterPosts = async (req, res) => {
       limit: parseInt(limit),
     });
 
-    // If filtering by country (with or without username) — return posts with country info once
+    // If filtering by country
     if (country) {
       const countryDetails = await getCountryDetails(country);
 
@@ -155,9 +146,9 @@ exports.getFilterPosts = async (req, res) => {
       });
     }
 
-    // If filtering by username only (no country) — include country info per post
+    // If filtering by username
     if (username && !country) {
-      // Get country details for each post's country (in parallel)
+      // Get country details for each post's country
       const postsWithCountryInfo = await Promise.all(
         posts.map(async (post) => {
           const countryDetails = post.countryName ? await getCountryDetails(post.countryName) : null;
@@ -179,7 +170,7 @@ exports.getFilterPosts = async (req, res) => {
       return res.status(200).json(postsWithCountryInfo);
     }
 
-    // If no filters (or unknown combination) — just return posts basic info without country details
+    // If no filters 
     const formattedPosts = posts.map(post => ({
       id: post.id,
       title: post.title,
@@ -301,28 +292,21 @@ exports.editPost = async (req, res) => {
   }
 };
 
-
-
-// controllers/blogPostController.js
-
 exports.getPostById = async (req, res) => {
-  const postId = req.params.id;  // Get postId from URL params
+  const postId = req.params.id; 
 
-  // Validate postId to make sure it's a valid number or string, based on your DB schema
   if (!postId || isNaN(postId)) {
     return res.status(400).json({ message: 'Invalid Post ID provided' });
   }
 
   try {
-    // Find the post by its ID, including associated User model
     const post = await BlogPost.findByPk(postId, {
       include: [{
         model: User,
-        attributes: ['id', 'username'], // Include only the fields you need from the User model
+        attributes: ['id', 'username'], 
       }]
     });
 
-    // If post is not found, return a 404 status
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
@@ -330,15 +314,14 @@ exports.getPostById = async (req, res) => {
     // Return the post details
     res.status(200).json(post);
   } catch (err) {
-    // Handle error if something goes wrong
-    console.error(err);  // Log the error for server-side debugging
+    console.error(err);
     res.status(500).json({ error: 'An error occurred while fetching the post.', details: err.message });
   }
 };
 
 
 exports.getSortedPosts = async (req, res) => {
-  const { sortBy } = req.query;  // sortBy can be 'newest', 'most_liked', or 'most_commented'
+  const { sortBy } = req.query; 
 
   try {
     let order;
@@ -353,11 +336,11 @@ exports.getSortedPosts = async (req, res) => {
         break;
       case 'most_commented':
         order = [
-          [Comment, 'createdAt', 'DESC'], // This assumes you want posts with the most recent comments sorted first
+          [Comment, 'createdAt', 'DESC'],
         ];
         break;
       default:
-        order = [['createdAt', 'DESC']];  // Default to newest if invalid sortBy value is given
+        order = [['createdAt', 'DESC']];
         break;
     }
 
@@ -369,8 +352,9 @@ exports.getSortedPosts = async (req, res) => {
           attributes: ['id', 'username'],
         },
         {
-          model: Comment,  // Include comments to filter by 'most_commented'
-          required: false, // To include posts with no comments as well
+          // Include comments to filter by 'most_commented'
+          model: Comment,  
+          required: false, 
         },
       ],
       order,
