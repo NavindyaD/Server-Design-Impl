@@ -70,6 +70,7 @@ exports.likePost = async (req, res) => {
   }
 };
 
+
 exports.unlikePost = async (req, res) => {
   const userId = req.user.id;
   const { blogPostId } = req.body;
@@ -86,11 +87,17 @@ exports.unlikePost = async (req, res) => {
       await post.save();
     }
 
+    // Increment unlikeCount when a post is unliked
+    post.unlikeCount += 1;
+    await post.save();
+
     res.json({ message: 'Post unliked' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
+
 
 exports.getFilterPosts = async (req, res) => {
   try {

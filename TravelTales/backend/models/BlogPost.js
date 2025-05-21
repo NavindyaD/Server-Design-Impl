@@ -22,6 +22,10 @@ const BlogPost = sequelize.define('BlogPost', {
   likeCount: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
+  },
+  unlikeCount: {  // Add the unlikeCount column
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
   }
 });
 
@@ -29,3 +33,4 @@ BlogPost.belongsTo(User, { foreignKey: 'userId' });
 User.hasMany(BlogPost, { foreignKey: 'userId' });
 
 module.exports = BlogPost;
+

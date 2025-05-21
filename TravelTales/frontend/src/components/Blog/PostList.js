@@ -314,6 +314,9 @@ const filterPosts = async (selectedCountry = country, usernameInput = username) 
               <div className="likes-info">
                 <p><strong>Likes:</strong> {post.likeCount ?? 0}</p>
               </div>
+              <div className="likes-info">
+                <p><strong>Unlikes:</strong> {post.unlikeCount ?? 0}</p>
+              </div>
 
               <div className="post-buttons">
                 <button onClick={() => handleLike(post.id)}>
