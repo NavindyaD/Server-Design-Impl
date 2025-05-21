@@ -1,4 +1,3 @@
-version: '3'
 services:
   backend:
     build:
@@ -9,8 +8,6 @@ services:
       - ./backend:/app
     environment:
       - NODE_ENV=production
-    depends_on:
-      - sqlite
 
   frontend:
     build:
@@ -21,8 +18,3 @@ services:
       - ./frontend:/app
     depends_on:
       - backend
-
-  sqlite:
-    image: nouchka/sqlite3
-    volumes:
-      - ./data:/root/db
