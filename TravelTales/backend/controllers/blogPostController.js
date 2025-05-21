@@ -1,8 +1,5 @@
-const {BlogPost} = require('../models');
-const {Like} = require('../models');
-const { User } = require('../models');
+const { Follow, BlogPost, User, Like, Comment } = require('../models');
 const getCountryDetails = require('../utils/getCountryDetails');
-const {Comment} = require('../models')
 
 exports.createPost = async (req, res) => {
   const { title, content, countryName, dateOfVisit } = req.body;
@@ -363,5 +360,60 @@ exports.getSortedPosts = async (req, res) => {
     res.status(200).json(posts);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getFeedPosts = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const following = await Follow.findAll({
+      where: { followerId: userId },
+      attributes: ['followingId'],
+    });
+
+    const followingIds = following.map(f => f.followingId);
+
+    if (followingIds.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    const posts = await BlogPost.findAll({
+      where: { userId: followingIds },
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'username'],
+        },
+        {
+          model: Like,
+          attributes: ['id'],
+        },
+        {
+          model: Comment,
+          attributes: ['id'],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    const formattedPosts = posts.map(post => ({
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      date: post.createdAt,
+      author: {
+        id: post.User.id,
+        username: post.User.username,
+      },
+      country: post.countryName,
+      likeCount: post.Likes.length,
+      commentCount: post.Comments.length,
+    }));
+
+    res.status(200).json(formattedPosts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching feed' });
   }
 };

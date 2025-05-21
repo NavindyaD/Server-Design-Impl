@@ -75,27 +75,70 @@ const PostList = () => {
     setCountry(selectedCountry);
     setSearchTerm(selectedCountry);
     setShowDropdown(false);
-    filterPosts();
+    filterPosts(selectedCountry, username);
   };
 
-  const filterPosts = () => {
-    let filteredPosts = [...allPosts];
+const filterPosts = async (selectedCountry = country, usernameInput = username) => {
+  let filteredPosts = [...allPosts];
 
-    if (country.trim()) {
-      filteredPosts = filteredPosts.filter(post => post.countryName === country || post.country === country);
+  // Case 1: Filter by country
+  if (selectedCountry.trim()) {
+    filteredPosts = filteredPosts.filter(post =>
+      post.countryName === selectedCountry || post.country === selectedCountry
+    );
+
+    // Fetch and show country details based on selectedCountry
+    try {
+      const response = await fetch(`https://restcountries.com/v3.1/name/${selectedCountry}?fullText=true`);
+      const data = await response.json();
+      const countryData = data[0];
+      setCountryDetails({
+        name: countryData.name.common,
+        flag: countryData.flags?.png || countryData.flags?.svg,
+        currency: Object.values(countryData.currencies || {})[0]?.name || 'Unknown',
+        capital: countryData.capital?.[0] || 'Unknown',
+      });
+    } catch (error) {
+      console.error('Error fetching country details:', error);
+      setCountryDetails(null);
     }
+  } else {
+    setCountryDetails(null);  // Reset country details when no country is selected
+  }
 
-    if (username.trim()) {
-      filteredPosts = filteredPosts.filter(post => post.User?.username.toLowerCase().includes(username.toLowerCase()));
+  // Case 2: Filter by username
+  if (usernameInput.trim()) {
+    filteredPosts = filteredPosts.filter(post =>
+      post.User?.username.toLowerCase().includes(usernameInput.toLowerCase())
+    );
+
+    // Fetch and show the first user's country details (from their post)
+    if (filteredPosts.length > 0 && filteredPosts[0].countryName) {
+      try {
+        const response = await fetch(`https://restcountries.com/v3.1/name/${filteredPosts[0].countryName}?fullText=true`);
+        const data = await response.json();
+        const countryData = data[0];
+        setCountryDetails({
+          name: countryData.name.common,
+          flag: countryData.flags?.png || countryData.flags?.svg,
+          currency: Object.values(countryData.currencies || {})[0]?.name || 'Unknown',
+          capital: countryData.capital?.[0] || 'Unknown',
+        });
+      } catch (error) {
+        console.error('Error fetching user country details:', error);
+        setCountryDetails(null);
+      }
     }
+  }
 
-    setPosts(filteredPosts);
-  };
+  // Update the state with the filtered posts
+  setPosts(filteredPosts);
+};
+
 
   const handleLike = async (postId) => {
     try {
       await api.post('/blogposts/like', { blogPostId: postId });
-
       setPosts(prevPosts =>
         prevPosts.map(post =>
           post.id === postId
@@ -111,7 +154,6 @@ const PostList = () => {
   const handleUnlike = async (postId) => {
     try {
       await api.post('/blogposts/unlike', { blogPostId: postId });
-
       setPosts(prevPosts =>
         prevPosts.map(post =>
           post.id === postId
@@ -141,11 +183,9 @@ const PostList = () => {
         alert('You must be logged in to follow users');
         return;
       }
-
       await api.post('/follow/follow', { followingId }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       setFollowingList(prev => [...prev, followingId]);
       alert('Followed successfully');
     } catch (error) {
@@ -158,7 +198,6 @@ const PostList = () => {
       alert('Please login to unfollow users.');
       return;
     }
-
     try {
       await api.delete(`/follow/unfollow/${followedUserId}`);
       setFollowingList(prev => prev.filter(id => id !== followedUserId));
@@ -173,6 +212,7 @@ const PostList = () => {
     setSearchTerm('');
     setUsername('');
     setShowDropdown(false);
+    setCountryDetails(null);
     setPosts(allPosts); 
   };
 
@@ -215,9 +255,20 @@ const PostList = () => {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        <button onClick={filterPosts}>Filter</button>
+        <button onClick={() => filterPosts()}>Filter</button>
         <button onClick={handleClearFilters}>Clear Filters</button>
       </div>
+
+      {/* Country Info */}
+      {countryDetails && (
+        <div className="country-details">
+          <h3>Country Info</h3>
+          <img src={countryDetails.flag} alt={`${countryDetails.name} flag`} style={{ width: '100px' }} />
+          <p><strong>Name:</strong> {countryDetails.name}</p>
+          <p><strong>Capital:</strong> {countryDetails.capital}</p>
+          <p><strong>Currency:</strong> {countryDetails.currency}</p>
+        </div>
+      )}
 
       {/* Sorting Dropdown */}
       <div className="sort-container">
@@ -254,23 +305,14 @@ const PostList = () => {
                   'Unknown'
                 )}
               </p>
-              <p>
-                <strong>Country:</strong> {post.countryName || post.country}
-              </p>
+              <p><strong>Country:</strong> {post.countryName || post.country}</p>
               {post.flag && (
-                <img
-                  src={post.flag}
-                  alt={`${post.countryName || post.country} flag`}
-                />
+                <img src={post.flag} alt={`${post.countryName || post.country} flag`} />
               )}
-              <p>
-                <strong>Date:</strong>{' '}
-                {new Date(post.dateOfVisit || post.createdAt).toLocaleDateString()}
-              </p>
+              <p><strong>Date:</strong> {new Date(post.dateOfVisit || post.createdAt).toLocaleDateString()}</p>
+
               <div className="likes-info">
-                <p>
-                  <strong>Likes:</strong> {post.likeCount ?? 0}
-                </p>
+                <p><strong>Likes:</strong> {post.likeCount ?? 0}</p>
               </div>
 
               <div className="post-buttons">
@@ -284,7 +326,6 @@ const PostList = () => {
 
                 {isOwnPost && <button onClick={() => handleDelete(post.id)}>Delete</button>}
 
-                {/* Follow/Unfollow */}
                 {!isOwnPost && user && (
                   isFollowing ? (
                     <button onClick={() => handleUnfollow(post.userId)}>Unfollow</button>
@@ -294,7 +335,6 @@ const PostList = () => {
                 )}
               </div>
 
-              {/* Comments */}
               <div className="comment-section">
                 <CommentSection postId={post.id} />
               </div>

@@ -9,6 +9,7 @@ import PostList from './components/Blog/PostList';
 import UserPosts from './pages/UserPosts';
 import EditPost from './components/Blog/EditPost';
 import ProfilePage from './pages/ProfilePage';
+import Feed from './components/Blog/Feed';
 const App = () => {
   return (
     <AuthProvider>
@@ -22,6 +23,7 @@ const App = () => {
           <Route path="/userPosts/:userId" element={<UserPosts />} />
           <Route path="/profile/:userId" element={<ProfilePage />} />
           <Route path="/edit/:id" element={<EditPost />} />
+          <Route path="/feed" element={<Feed />} />
         </Routes>
       </Router>
     </AuthProvider>

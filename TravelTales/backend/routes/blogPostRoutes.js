@@ -15,6 +15,6 @@ router.put('/posts/:id', authenticateToken, blogPostController.editPost)
 router.get('/postsById/:id', authenticateToken, blogPostController.getPostById)
 router.get('/user/:userId/posts', authenticateToken, blogPostController.getPostsByUserId);
 router.get('/posts/sort', blogPostController.getSortedPosts);
-
+router.get('/feed', authenticateToken, blogPostController.getFeedPosts);
 
 module.exports = router;
