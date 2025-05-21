@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import api from '../../api/axios';
-import './Post.css'; 
+import './Post.css';
 
 const CreatePost = () => {
   const [post, setPost] = useState({
@@ -12,6 +12,9 @@ const CreatePost = () => {
   });
 
   const [countries, setCountries] = useState([]);
+  const [filteredCountries, setFilteredCountries] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -22,6 +25,7 @@ const CreatePost = () => {
           .map((country) => country.name.common)
           .sort((a, b) => a.localeCompare(b));
         setCountries(countryNames);
+        setFilteredCountries(countryNames);
       } catch (err) {
         console.error('Error fetching countries:', err);
       }
@@ -30,8 +34,26 @@ const CreatePost = () => {
     fetchCountries();
   }, []);
 
+  // Filter countries based on search term
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchTerm(query);
+
+    setFilteredCountries(
+      countries.filter((country) =>
+        country.toLowerCase().includes(query.toLowerCase())
+      )
+    );
+  };
+
   const handleChange = (e) =>
     setPost({ ...post, [e.target.name]: e.target.value });
+
+  const handleDropdownSelect = (country) => {
+    setPost({ ...post, countryName: country });
+    setSearchTerm(country);
+    setShowDropdown(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,19 +97,35 @@ const CreatePost = () => {
         onChange={handleChange}
         required
       />
-      <select
-        name="countryName"
-        value={post.countryName}
-        onChange={handleChange}
-        required
-      >
-        <option value="">Select Country</option>
-        {countries.map((name) => (
-          <option key={name} value={name}>
-            {name}
-          </option>
-        ))}
-      </select>
+
+      {/* Searchable dropdown with countries */}
+      <div className="country-dropdown">
+        <input
+          type="text"
+          placeholder="Search Country"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          onClick={() => setShowDropdown(!showDropdown)}
+        />
+        {showDropdown && (
+          <div className="dropdown-list">
+            {filteredCountries.length > 0 ? (
+              filteredCountries.map((country) => (
+                <div
+                  key={country}
+                  className="dropdown-item"
+                  onClick={() => handleDropdownSelect(country)}
+                >
+                  {country}
+                </div>
+              ))
+            ) : (
+              <div className="dropdown-item">No results found</div>
+            )}
+          </div>
+        )}
+      </div>
+
       <input
         name="dateOfVisit"
         type="date"

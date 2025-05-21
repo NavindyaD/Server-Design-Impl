@@ -16,6 +16,9 @@ const PostList = () => {
   const [username, setUsername] = useState('');
   const [followingList, setFollowingList] = useState([]);
   const [countries, setCountries] = useState([]);
+  const [filteredCountries, setFilteredCountries] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
   const [sortOption, setSortOption] = useState('newest');
 
   useEffect(() => {
@@ -35,49 +38,6 @@ const PostList = () => {
     }
   };
 
-  const filterPosts = () => {
-    let filteredPosts = [...allPosts];
-
-    // Filter by country
-    if (country.trim()) {
-      filteredPosts = filteredPosts.filter(post => post.countryName === country || post.country === country);
-    }
-
-    // Filter by username
-    if (username.trim()) {
-      filteredPosts = filteredPosts.filter(post => post.User?.username.toLowerCase().includes(username.toLowerCase()));
-    }
-
-    setPosts(filteredPosts);
-  };
-
-  const handleLike = async (postId) => {
-    try {
-      await api.post('/blogposts/like', { blogPostId: postId });
-      refreshPosts();
-    } catch (error) {
-      alert(error.response?.data?.message || 'Failed to like post');
-    }
-  };
-
-  const handleUnlike = async (postId) => {
-    try {
-      await api.post('/blogposts/unlike', { blogPostId: postId });
-      refreshPosts();
-    } catch (error) {
-      alert(error.response?.data?.message || 'Failed to unlike post');
-    }
-  };
-
-  const handleDelete = async (postId) => {
-    try {
-      await api.delete(`/blogposts/${postId}`);
-      refreshPosts();
-    } catch (error) {
-      alert(error.response?.data?.message || 'Failed to delete post');
-    }
-  };
-
   const fetchFollowingList = async (userId) => {
     try {
       const response = await api.get(`/follow/following/${userId}`);
@@ -91,15 +51,86 @@ const PostList = () => {
     try {
       const response = await fetch('https://restcountries.com/v3.1/all');
       const data = await response.json();
-      const countryList = data
-        .map(country => ({
-          name: country.name.common,
-          code: country.cca2,
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name));
-      setCountries(countryList);
+      const countryNames = data
+        .map(country => country.name.common)
+        .sort((a, b) => a.localeCompare(b));
+      setCountries(countryNames);
+      setFilteredCountries(countryNames);
     } catch (error) {
       console.error('Failed to fetch countries', error);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchTerm(query);
+    setFilteredCountries(
+      countries.filter((country) =>
+        country.toLowerCase().includes(query.toLowerCase())
+      )
+    );
+  };
+
+  const handleDropdownSelect = (selectedCountry) => {
+    setCountry(selectedCountry);
+    setSearchTerm(selectedCountry);
+    setShowDropdown(false);
+    filterPosts();
+  };
+
+  const filterPosts = () => {
+    let filteredPosts = [...allPosts];
+
+    if (country.trim()) {
+      filteredPosts = filteredPosts.filter(post => post.countryName === country || post.country === country);
+    }
+
+    if (username.trim()) {
+      filteredPosts = filteredPosts.filter(post => post.User?.username.toLowerCase().includes(username.toLowerCase()));
+    }
+
+    setPosts(filteredPosts);
+  };
+
+  const handleLike = async (postId) => {
+    try {
+      await api.post('/blogposts/like', { blogPostId: postId });
+
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post.id === postId
+            ? { ...post, likeCount: (post.likeCount ?? 0) + 1 }
+            : post
+        )
+      );
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to like post');
+    }
+  };
+
+  const handleUnlike = async (postId) => {
+    try {
+      await api.post('/blogposts/unlike', { blogPostId: postId });
+
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post.id === postId
+            ? { ...post, likeCount: Math.max((post.likeCount ?? 1) - 1, 0) }
+            : post
+        )
+      );
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to unlike post');
+    }
+  };
+
+  const handleDelete = async (postId) => {
+    try {
+      await api.delete(`/blogposts/${postId}`);
+      setPosts(prev => prev.filter(post => post.id !== postId));
+      alert('Post deleted successfully');
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to delete post');
     }
   };
 
@@ -111,14 +142,13 @@ const PostList = () => {
         return;
       }
 
-      await api.post('/follow/follow',
-        { followingId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post('/follow/follow', { followingId }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setFollowingList(prev => [...prev, followingId]);
       alert('Followed successfully');
-      refreshPosts();
     } catch (error) {
-      console.error(error);
       alert(error.response?.data?.message || 'Failed to follow user');
     }
   };
@@ -128,21 +158,22 @@ const PostList = () => {
       alert('Please login to unfollow users.');
       return;
     }
+
     try {
-      await api.delete(`http://localhost:5000/api/follow/unfollow/${followedUserId}`);
-      fetchFollowingList(user.id);
-      alert('Successfully unfollowed the user');
+      await api.delete(`/follow/unfollow/${followedUserId}`);
+      setFollowingList(prev => prev.filter(id => id !== followedUserId));
+      alert('Unfollowed successfully');
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to unfollow user');
     }
   };
 
-  const refreshPosts = () => {
-    if (country.trim() || username.trim()) {
-      filterPosts();
-    } else {
-      setPosts(allPosts);
-    }
+  const handleClearFilters = () => {
+    setCountry('');
+    setSearchTerm('');
+    setUsername('');
+    setShowDropdown(false);
+    setPosts(allPosts); 
   };
 
   return (
@@ -150,17 +181,33 @@ const PostList = () => {
       <h2>Blog Posts</h2>
 
       <div className="filter-container">
-        <select
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-        >
-          <option value="">Select a country</option>
-          {countries.map((country) => (
-            <option key={country.code} value={country.name}>
-              {country.name}
-            </option>
-          ))}
-        </select>
+        {/* Searchable Country Dropdown */}
+        <div className="country-dropdown">
+          <input
+            type="text"
+            placeholder="Search Country"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            onClick={() => setShowDropdown(!showDropdown)}
+          />
+          {showDropdown && (
+            <div className="dropdown-list">
+              {filteredCountries.length > 0 ? (
+                filteredCountries.map((country) => (
+                  <div
+                    key={country}
+                    className="dropdown-item"
+                    onClick={() => handleDropdownSelect(country)}
+                  >
+                    {country}
+                  </div>
+                ))
+              ) : (
+                <div className="dropdown-item">No results found</div>
+              )}
+            </div>
+          )}
+        </div>
 
         <input
           type="text"
@@ -169,15 +216,7 @@ const PostList = () => {
           onChange={(e) => setUsername(e.target.value)}
         />
         <button onClick={filterPosts}>Filter</button>
-        <button
-          onClick={() => {
-            setCountry('');
-            setUsername('');
-            setPosts(allPosts);
-          }}
-        >
-          Clear Filters
-        </button>
+        <button onClick={handleClearFilters}>Clear Filters</button>
       </div>
 
       {/* Sorting Dropdown */}
@@ -204,10 +243,7 @@ const PostList = () => {
           const isFollowing = followingList.includes(post.userId);
           const isOwnPost = user && user.id === post.userId;
           return (
-            <div
-              key={post.id}
-              className="post-item"
-            >
+            <div key={post.id} className="post-item">
               <h3>{post.title}</h3>
               <p>{post.content}</p>
               <p>
