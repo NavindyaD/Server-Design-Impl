@@ -81,7 +81,7 @@ const PostList = () => {
 const filterPosts = async (selectedCountry = country, usernameInput = username) => {
   let filteredPosts = [...allPosts];
 
-  // Case 1: Filter by country
+  // Filter by country
   if (selectedCountry.trim()) {
     filteredPosts = filteredPosts.filter(post =>
       post.countryName === selectedCountry || post.country === selectedCountry
@@ -106,7 +106,7 @@ const filterPosts = async (selectedCountry = country, usernameInput = username) 
     setCountryDetails(null);  // Reset country details when no country is selected
   }
 
-  // Case 2: Filter by username
+  // Filter by username
   if (usernameInput.trim()) {
     filteredPosts = filteredPosts.filter(post =>
       post.User?.username.toLowerCase().includes(usernameInput.toLowerCase())
