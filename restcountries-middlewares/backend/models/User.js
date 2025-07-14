@@ -7,6 +7,7 @@ const User = sequelize.define("User", {
   apiKey: { type: DataTypes.STRING, unique: true },
   usageCount: { type: DataTypes.INTEGER, defaultValue: 0 },
   lastUsedAt: { type: DataTypes.DATE, allowNull: true },
+  role: { type: DataTypes.STRING, allowNull: false, defaultValue: "user" },
 });
 
 module.exports = User;

@@ -20,7 +20,7 @@ exports.getCountryInfo = async (req, res) => {
         name: name.common,
         currency: currencies ? Object.values(currencies)[0].name : "N/A",
         capital: capital ? capital[0] : "N/A",
-        languages: languageList.length > 0 ? languageList.join(", ") : "N/A",  // Safely join languages
+        languages: languageList.length > 0 ? languageList.join(", ") : "N/A", 
         flag: flags.png
       };
     });

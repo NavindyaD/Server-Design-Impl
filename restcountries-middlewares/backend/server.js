@@ -1,37 +1,46 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const sequelize = require("./database/db");
+const session = require("express-session");
+const SequelizeStore = require("connect-session-sequelize")(session.Store);
 
-const authRoutes = require("./routes/auth");
-const postRoutes = require("./routes/posts");
-const followRoutes = require("./routes/follow");
-const countryRoutes = require("./routes/countries");
-const likeRoutes = require("./routes/likeRoutes");
+const sequelize = require("./database/db");
+const authRoutes = require("./routes/authRoutes");
+const countryRoutes = require("./routes/countryRoutes");
+const adminApiKeysRoutes = require("./routes/adminRoutes");
 
 dotenv.config();
 
 const app = express();
 
-// Apply CORS before routes
 app.use(cors({
-  origin: "http://localhost:3000",
-  credentials: true
+  origin: process.env.NODE_ENV === 'production' ? 'http://localhost' : 'http://localhost:3000',
+  credentials: true,
 }));
 
 app.use(express.json());
 
-// Define routes
-app.use("/api/auth", authRoutes);
-app.use("/api/posts", postRoutes);
-app.use("/api/follow", followRoutes);
-app.use("/api/countries", countryRoutes);
-app.use("/", likeRoutes); // Optional: adjust prefix if needed
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  store: new SequelizeStore({
+    db: sequelize,
+  }),
+  cookie: {
+    httpOnly: true,
+    secure: false,
+    maxAge: 1000 * 60 * 60,
+  },
+}));
 
-// Sync database and start server
+app.use("/auth", authRoutes);
+app.use("/api", countryRoutes);
+app.use("/api/admin/apikeys", adminApiKeysRoutes);
+
 sequelize.sync().then(() => {
   console.log("Database synced");
-  app.listen(5000, '0.0.0.0', () => {
-    console.log("Server running on http://0.0.0.0:5000");
-  });
+  app.listen(3001, "0.0.0.0", () =>
+    console.log("Server running at http://0.0.0.0:3001")
+  );
 });
