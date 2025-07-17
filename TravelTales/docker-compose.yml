@@ -1,20 +1,22 @@
+version: '3.8'
+
 services:
   backend:
-    build:
-      context: ./backend
+    build: ./backend
     ports:
-      - "5000:5000"
-    volumes:
-      - ./backend:/app
+      - "3001:5000"
     environment:
       - NODE_ENV=production
+    volumes:
+      - ./backend/database.sqlite:/app/database.sqlite
+    restart: unless-stopped
 
   frontend:
-    build:
-      context: ./frontend
+    build: ./frontend
     ports:
-      - "3000:80"
-    volumes:
-      - ./frontend:/app
+      - "80:80"
+    environment:
+      - REACT_APP_API_BASE_URL=http://backend:5000/api
     depends_on:
       - backend
+    restart: unless-stopped 

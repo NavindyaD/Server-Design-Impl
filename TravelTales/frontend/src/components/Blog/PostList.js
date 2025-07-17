@@ -12,6 +12,7 @@ const PostList = () => {
   const [posts, setPosts] = useState([]);
   const [allPosts, setAllPosts] = useState([]);
   const [countryDetails, setCountryDetails] = useState(null);
+  const [multipleCountryDetails, setMultipleCountryDetails] = useState([]); // NEW
   const [country, setCountry] = useState('');
   const [username, setUsername] = useState('');
   const [followingList, setFollowingList] = useState([]);
@@ -33,6 +34,7 @@ const PostList = () => {
       setAllPosts(response.data);
       setPosts(response.data);
       setCountryDetails(null);
+      setMultipleCountryDetails([]); // Reset multiple details
     } catch (error) {
       alert('Failed to fetch posts');
     }
@@ -47,28 +49,23 @@ const PostList = () => {
     }
   };
 
-const fetchCountries = async () => {
-  try {
-    const response = await fetch('https://restcountries.com/v3.1/all?fields=name');
-    const data = await response.json();
-
-    if (!Array.isArray(data)) {
-      console.error('Unexpected response format from countries API:', data);
-      return;
+  const fetchCountries = async () => {
+    try {
+      const response = await fetch('https://restcountries.com/v3.1/all?fields=name');
+      const data = await response.json();
+      if (!Array.isArray(data)) {
+        console.error('Unexpected response format from countries API:', data);
+        return;
+      }
+      const countryNames = data
+        .map(country => country.name.common)
+        .sort((a, b) => a.localeCompare(b));
+      setCountries(countryNames);
+      setFilteredCountries(countryNames);
+    } catch (error) {
+      console.error('Failed to fetch countries', error);
     }
-
-    const countryNames = data
-      .map(country => country.name.common)
-      .sort((a, b) => a.localeCompare(b));
-
-    setCountries(countryNames);
-    setFilteredCountries(countryNames);
-  } catch (error) {
-    console.error('Failed to fetch countries', error);
-  }
-};
-
-
+  };
 
   const handleSearchChange = (e) => {
     const query = e.target.value;
@@ -87,44 +84,15 @@ const fetchCountries = async () => {
     filterPosts(selectedCountry, username);
   };
 
-const filterPosts = async (selectedCountry = country, usernameInput = username) => {
-  let filteredPosts = [...allPosts];
+  const filterPosts = async (selectedCountry = country, usernameInput = username) => {
+    let filteredPosts = [...allPosts];
 
-  // Filter by country
-  if (selectedCountry.trim()) {
-    filteredPosts = filteredPosts.filter(post =>
-      post.countryName === selectedCountry || post.country === selectedCountry
-    );
-
-    // Fetch and show country details based on selectedCountry
-    try {
-      const response = await fetch(`https://restcountries.com/v3.1/name/${selectedCountry}?fullText=true`);
-      const data = await response.json();
-      const countryData = data[0];
-      setCountryDetails({
-        name: countryData.name.common,
-        flag: countryData.flags?.png || countryData.flags?.svg,
-        currency: Object.values(countryData.currencies || {})[0]?.name || 'Unknown',
-        capital: countryData.capital?.[0] || 'Unknown',
-      });
-    } catch (error) {
-      console.error('Error fetching country details:', error);
-      setCountryDetails(null);
-    }
-  } else {
-    setCountryDetails(null);  // Reset country details when no country is selected
-  }
-
-  // Filter by username
-  if (usernameInput.trim()) {
-    filteredPosts = filteredPosts.filter(post =>
-      post.User?.username.toLowerCase().includes(usernameInput.toLowerCase())
-    );
-
-    // Fetch and show the first user's country details (from their post)
-    if (filteredPosts.length > 0 && filteredPosts[0].countryName) {
+    if (selectedCountry.trim()) {
+      filteredPosts = filteredPosts.filter(post =>
+        post.countryName === selectedCountry || post.country === selectedCountry
+      );
       try {
-        const response = await fetch(`https://restcountries.com/v3.1/name/${filteredPosts[0].countryName}?fullText=true`);
+        const response = await fetch(`https://restcountries.com/v3.1/name/${selectedCountry}?fullText=true`);
         const data = await response.json();
         const countryData = data[0];
         setCountryDetails({
@@ -133,17 +101,47 @@ const filterPosts = async (selectedCountry = country, usernameInput = username) 
           currency: Object.values(countryData.currencies || {})[0]?.name || 'Unknown',
           capital: countryData.capital?.[0] || 'Unknown',
         });
+        setMultipleCountryDetails([]); // Clear multi-country if switching to single
       } catch (error) {
-        console.error('Error fetching user country details:', error);
+        console.error('Error fetching country details:', error);
         setCountryDetails(null);
       }
+    } else {
+      setCountryDetails(null);
     }
-  }
 
-  // Update the state with the filtered posts
-  setPosts(filteredPosts);
-};
+    if (usernameInput.trim()) {
+      filteredPosts = filteredPosts.filter(post =>
+        post.User?.username.toLowerCase().includes(usernameInput.toLowerCase())
+      );
 
+      const uniqueCountries = [
+        ...new Set(filteredPosts.map(post => post.countryName || post.country).filter(Boolean))
+      ];
+
+      try {
+        const promises = uniqueCountries.map(country =>
+          fetch(`https://restcountries.com/v3.1/name/${country}?fullText=true`)
+            .then(res => res.json())
+            .then(data => ({
+              name: data[0]?.name?.common || country,
+              flag: data[0]?.flags?.png || data[0]?.flags?.svg || '',
+              currency: Object.values(data[0]?.currencies || {})[0]?.name || 'Unknown',
+              capital: data[0]?.capital?.[0] || 'Unknown'
+            }))
+        );
+
+        const allCountryDetails = await Promise.all(promises);
+        setMultipleCountryDetails(allCountryDetails);
+        setCountryDetails(null); // Clear single country when showing multiple
+      } catch (error) {
+        console.error('Error fetching multiple country details:', error);
+        setMultipleCountryDetails([]);
+      }
+    }
+
+    setPosts(filteredPosts);
+  };
 
   const handleLike = async (postId) => {
     try {
@@ -166,7 +164,7 @@ const filterPosts = async (selectedCountry = country, usernameInput = username) 
       setPosts(prevPosts =>
         prevPosts.map(post =>
           post.id === postId
-            ? { ...post, likeCount: Math.max((post.likeCount ?? 1) - 1, 0) }
+            ? { ...post, unlikeCount: Math.max((post.unlikeCount ?? 1) - 1, 0) }
             : post
         )
       );
@@ -222,7 +220,8 @@ const filterPosts = async (selectedCountry = country, usernameInput = username) 
     setUsername('');
     setShowDropdown(false);
     setCountryDetails(null);
-    setPosts(allPosts); 
+    setMultipleCountryDetails([]); // Clear multi-country data
+    setPosts(allPosts);
   };
 
   return (
@@ -230,7 +229,6 @@ const filterPosts = async (selectedCountry = country, usernameInput = username) 
       <h2>Blog Posts</h2>
 
       <div className="filter-container">
-        {/* Searchable Country Dropdown */}
         <div className="country-dropdown">
           <input
             type="text"
@@ -268,7 +266,6 @@ const filterPosts = async (selectedCountry = country, usernameInput = username) 
         <button onClick={handleClearFilters}>Clear Filters</button>
       </div>
 
-      {/* Country Info */}
       {countryDetails && (
         <div className="country-details">
           <h3>Country Info</h3>
@@ -279,7 +276,22 @@ const filterPosts = async (selectedCountry = country, usernameInput = username) 
         </div>
       )}
 
-      {/* Sorting Dropdown */}
+      {multipleCountryDetails.length > 0 && (
+        <div className="multiple-country-details">
+          <h3>Countries User Has Posted About:</h3>
+          <div className="country-cards">
+            {multipleCountryDetails.map((country, index) => (
+              <div key={index} className="country-card">
+                <img src={country.flag} alt={`${country.name} flag`} style={{ width: '80px' }} />
+                <p><strong>Name:</strong> {country.name}</p>
+                <p><strong>Capital:</strong> {country.capital}</p>
+                <p><strong>Currency:</strong> {country.currency}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="sort-container">
         <label>Sort by: </label>
         <select
@@ -295,7 +307,6 @@ const filterPosts = async (selectedCountry = country, usernameInput = username) 
         </select>
       </div>
 
-      {/* Posts */}
       {posts.length === 0 ? (
         <p>No posts found.</p>
       ) : (
@@ -322,8 +333,6 @@ const filterPosts = async (selectedCountry = country, usernameInput = username) 
 
               <div className="likes-info">
                 <p><strong>Likes:</strong> {post.likeCount ?? 0}</p>
-              </div>
-              <div className="likes-info">
                 <p><strong>Unlikes:</strong> {post.unlikeCount ?? 0}</p>
               </div>
 

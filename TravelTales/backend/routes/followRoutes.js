@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const followController = require('../controllers/FollowController');
+const followController = require('../controllers/followController');
 const authenticate = require('../middleware/authMiddleware');
 
 router.post('/follow', authenticate, followController.followUser);
