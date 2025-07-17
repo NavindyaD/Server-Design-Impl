@@ -18,18 +18,28 @@ const CreatePost = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const response = await axios.get('https://restcountries.com/v3.1/all');
-        const countryNames = response.data
-          .map((country) => country.name.common)
-          .sort((a, b) => a.localeCompare(b));
-        setCountries(countryNames);
-        setFilteredCountries(countryNames);
-      } catch (err) {
-        console.error('Error fetching countries:', err);
-      }
-    };
+const fetchCountries = async () => {
+  try {
+    const response = await fetch('https://restcountries.com/v3.1/all?fields=name');
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+      console.error('Unexpected response from countries API:', data);
+      return;
+    }
+
+    const countryNames = data
+      .map((country) => country.name?.common)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+
+    setCountries(countryNames);
+    setFilteredCountries(countryNames);
+  } catch (error) {
+    console.error('Failed to fetch countries:', error);
+  }
+};
+
 
     fetchCountries();
   }, []);

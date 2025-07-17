@@ -21,17 +21,19 @@ const EditPost = () => {
   const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const res = await axios.get('https://restcountries.com/v3.1/all');
-        const names = res.data
-          .map((c) => c.name.common)
-          .sort((a, b) => a.localeCompare(b));
-        setCountries(names);
-      } catch (err) {
-        console.error('Error fetching countries:', err);
-      }
-    };
+  const fetchCountries = async () => {
+    try {
+      const res = await axios.get('https://restcountries.com/v3.1/all?fields=name');
+      const names = res.data
+        .map((c) => c.name?.common)
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+      setCountries(names);
+    } catch (err) {
+      console.error('Error fetching countries:', err);
+      setError('Failed to load country list');
+    }
+  };
 
     fetchCountries();
   }, []);

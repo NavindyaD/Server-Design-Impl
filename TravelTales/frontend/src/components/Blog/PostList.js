@@ -47,19 +47,28 @@ const PostList = () => {
     }
   };
 
-  const fetchCountries = async () => {
-    try {
-      const response = await fetch('https://restcountries.com/v3.1/all');
-      const data = await response.json();
-      const countryNames = data
-        .map(country => country.name.common)
-        .sort((a, b) => a.localeCompare(b));
-      setCountries(countryNames);
-      setFilteredCountries(countryNames);
-    } catch (error) {
-      console.error('Failed to fetch countries', error);
+const fetchCountries = async () => {
+  try {
+    const response = await fetch('https://restcountries.com/v3.1/all?fields=name');
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+      console.error('Unexpected response format from countries API:', data);
+      return;
     }
-  };
+
+    const countryNames = data
+      .map(country => country.name.common)
+      .sort((a, b) => a.localeCompare(b));
+
+    setCountries(countryNames);
+    setFilteredCountries(countryNames);
+  } catch (error) {
+    console.error('Failed to fetch countries', error);
+  }
+};
+
+
 
   const handleSearchChange = (e) => {
     const query = e.target.value;
